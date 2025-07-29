@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as go from 'gojs';
 import { mockFamilyMembers } from '@/data/mockData';
 import { FamilyMember } from '@/types';
@@ -32,6 +32,8 @@ function getGoJSData(members: FamilyMember[]) {
 
 const FamilyTreeGoJS: React.FC = () => {
   const diagramRef = useRef<HTMLDivElement>(null);
+  const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
+  const [showPanel, setShowPanel] = useState(false);
 
   useEffect(() => {
     if (!diagramRef.current) return;
@@ -106,11 +108,76 @@ const FamilyTreeGoJS: React.FC = () => {
 
     diagram.model = new go.GraphLinksModel(nodes, links);
 
+    // Add click event handler for nodes
+    diagram.addDiagramListener('ObjectSingleClicked', e => {
+      const part = e.subject.part;
+      if (part instanceof go.Node) {
+        const key = part.data.key;
+        const member = mockFamilyMembers.find(m => m.id === key);
+        setSelectedMember(member || null);
+        setShowPanel(true); // Automatically show panel when member is selected
+      }
+    });
+
+    // Add click handler to hide panel when clicking on background
+    diagram.addDiagramListener('BackgroundSingleClicked', e => {
+      setSelectedMember(null);
+      setShowPanel(false);
+    });
+
     return () => { diagram.div = null; };
   }, []);
 
   return (
-    <div className="w-full h-[600px] border rounded-lg shadow bg-white" ref={diagramRef} />
+    <div className="relative w-full h-[600px] border rounded-lg shadow bg-white">
+      <div className="w-full h-full" ref={diagramRef} />
+      
+      {/* Show Details button only when a member is selected */}
+      {selectedMember && (
+        <button
+          className="absolute top-4 right-4 z-20 px-3 py-1 bg-green-600 text-white rounded shadow hover:bg-green-700 focus:outline-none transition-colors"
+          onClick={() => setShowPanel((prev) => !prev)}
+        >
+          {showPanel ? 'Hide Details' : 'Show Details'}
+        </button>
+      )}
+      
+      {/* No member selected indicator */}
+      {!selectedMember && (
+        <div className="absolute top-4 right-4 z-20 px-3 py-2 bg-gray-100 text-gray-600 rounded shadow text-sm">
+          Click on a family member to view details
+        </div>
+      )}
+      
+      {showPanel && selectedMember && (
+        <div className="absolute top-16 right-4 z-20 w-80 p-4 border rounded-lg shadow bg-white">
+          <button
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 transition-colors"
+            onClick={() => setShowPanel(false)}
+            aria-label="Close details"
+          >
+            ×
+          </button>
+          <div className="flex items-center mb-4">
+            <img
+              src={selectedMember.profileImage}
+              alt={selectedMember.name}
+              className="w-16 h-16 rounded-full object-cover border mr-4"
+            />
+            <div>
+              <h2 className="text-lg font-bold text-green-900">{selectedMember.name}</h2>
+              <p className="text-green-700">{selectedMember.relationship}</p>
+              <p className="text-gray-500 text-sm">
+                {selectedMember.birthDate && `b. ${selectedMember.birthDate}`} {selectedMember.deathDate && `- d. ${selectedMember.deathDate}`}
+              </p>
+            </div>
+          </div>
+          {selectedMember.biography && <p className="mb-2 text-gray-700">{selectedMember.biography}</p>}
+          {selectedMember.occupation && <p className="text-sm text-gray-600">Occupation: {selectedMember.occupation}</p>}
+          {selectedMember.location && <p className="text-sm text-gray-600">Location: {selectedMember.location}</p>}
+        </div>
+      )}
+    </div>
   );
 };
 
