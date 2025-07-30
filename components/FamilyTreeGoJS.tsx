@@ -32,8 +32,10 @@ function getGoJSData(members: FamilyMember[]) {
 
 const FamilyTreeGoJS: React.FC = () => {
   const diagramRef = useRef<HTMLDivElement>(null);
+  const diagramInstanceRef = useRef<go.Diagram | null>(null);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [showPanel, setShowPanel] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
     if (!diagramRef.current) return;
@@ -45,7 +47,18 @@ const FamilyTreeGoJS: React.FC = () => {
       layout: $(go.LayeredDigraphLayout, { direction: 90, layerSpacing: 40 }),
       'undoManager.isEnabled': true,
       autoScale: go.Diagram.Uniform,
+      // Enable mouse wheel zooming
+      'toolManager.mouseWheelBehavior': go.ToolManager.WheelZoom,
+      // Set zoom factor
+      'commandHandler.zoomFactor': 1.25,
     });
+
+    // Configure panning tool after diagram creation
+    diagram.toolManager.panningTool.isEnabled = true;
+    diagram.toolManager.panningTool.isActive = false;
+
+    // Store diagram instance for external control
+    diagramInstanceRef.current = diagram;
 
     diagram.nodeTemplate = $(
       go.Node,
@@ -125,12 +138,119 @@ const FamilyTreeGoJS: React.FC = () => {
       setShowPanel(false);
     });
 
-    return () => { diagram.div = null; };
+    // Listen for zoom changes
+    diagram.addDiagramListener('ViewportBoundsChanged', e => {
+      setZoomLevel(diagram.commandHandler.zoomFactor);
+    });
+
+    return () => { 
+      diagram.div = null; 
+      diagramInstanceRef.current = null;
+    };
   }, []);
+
+  // Zoom control functions
+  const zoomIn = () => {
+    if (diagramInstanceRef.current) {
+      const currentZoom = diagramInstanceRef.current.commandHandler.zoomFactor;
+      if (currentZoom < 4) { // max zoom 400%
+        diagramInstanceRef.current.commandHandler.increaseZoom();
+      }
+    }
+  };
+
+  const zoomOut = () => {
+    if (diagramInstanceRef.current) {
+      const currentZoom = diagramInstanceRef.current.commandHandler.zoomFactor;
+      if (currentZoom > 0.25) { // min zoom 25%
+        diagramInstanceRef.current.commandHandler.decreaseZoom();
+      }
+    }
+  };
+
+  const resetZoom = () => {
+    if (diagramInstanceRef.current) {
+      diagramInstanceRef.current.commandHandler.resetZoom();
+    }
+  };
+
+  const fitToWindow = () => {
+    if (diagramInstanceRef.current) {
+      diagramInstanceRef.current.commandHandler.zoomToFit();
+    }
+  };
+
+  const togglePanning = () => {
+    if (diagramInstanceRef.current) {
+      const tool = diagramInstanceRef.current.toolManager.panningTool;
+      tool.isActive = !tool.isActive;
+    }
+  };
 
   return (
     <div className="relative w-full h-[600px] border rounded-lg shadow bg-white">
       <div className="w-full h-full" ref={diagramRef} />
+      
+      {/* Zoom and Pan Controls */}
+      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+        {/* Zoom Controls */}
+        <div className="flex flex-col bg-white rounded-lg shadow border">
+          <button
+            className="px-3 py-2 bg-green-600 text-white hover:bg-green-700 focus:outline-none transition-colors rounded-t-lg"
+            onClick={zoomIn}
+            title="Zoom In"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </button>
+          
+          <div className="px-3 py-1 text-center text-xs text-gray-600 bg-gray-50 border-t border-b">
+            {Math.round(zoomLevel * 100)}%
+          </div>
+          
+          <button
+            className="px-3 py-2 bg-green-600 text-white hover:bg-green-700 focus:outline-none transition-colors"
+            onClick={zoomOut}
+            title="Zoom Out"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            </svg>
+          </button>
+          
+          <button
+            className="px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 focus:outline-none transition-colors border-t"
+            onClick={resetZoom}
+            title="Reset Zoom"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
+          
+          <button
+            className="px-3 py-2 bg-purple-600 text-white hover:bg-purple-700 focus:outline-none transition-colors rounded-b-lg border-t"
+            onClick={fitToWindow}
+            title="Fit to Window"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8l8-8 8 8M4 16l8 8 8-8" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Pan Control */}
+        <button
+          className="px-3 py-2 bg-orange-600 text-white hover:bg-orange-700 focus:outline-none transition-colors rounded-lg shadow border"
+          onClick={togglePanning}
+          title="Toggle Panning Mode"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          </svg>
+        </button>
+      </div>
       
       {/* Show Details button only when a member is selected */}
       {selectedMember && (
@@ -148,6 +268,13 @@ const FamilyTreeGoJS: React.FC = () => {
           Click on a family member to view details
         </div>
       )}
+      
+      {/* Instructions */}
+      <div className="absolute bottom-4 left-4 z-20 px-3 py-2 bg-white bg-opacity-90 text-gray-600 rounded shadow text-xs">
+        <div>• Use mouse wheel to zoom</div>
+        <div>• Click and drag to pan</div>
+        <div>• Use controls to adjust view</div>
+      </div>
       
       {showPanel && selectedMember && (
         <div className="absolute top-16 right-4 z-20 w-80 p-4 border rounded-lg shadow bg-white">
