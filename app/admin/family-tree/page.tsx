@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,18 +34,19 @@ import {
   Shield,
   AlertCircle,
   Search,
-  Eye
+  Eye,
+  Network
 } from 'lucide-react';
 import { mockFamilyMembers } from '@/data/mockData';
 import { FamilyMember } from '@/types';
 
-const STORAGE_KEY = 'users-data'; // Only for users/admins with accounts
+const STORAGE_KEY = 'family-tree-data';
 
-export default function AdminMembersPage() {
+export default function AdminFamilyTreePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -53,34 +54,27 @@ export default function AdminMembersPage() {
   const [viewingMember, setViewingMember] = useState<FamilyMember | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Load users (members with accounts) from localStorage or use mock data
+  // Load family tree members from localStorage or use mock data
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        const storedMembers = JSON.parse(stored);
-        // Filter to only include users (members with accounts)
-        const usersOnly = storedMembers.filter((m: FamilyMember) => m.isUser || m.userId);
-        setMembers(usersOnly);
+        setFamilyMembers(JSON.parse(stored));
       } catch (error) {
-        console.error('Error loading users from storage:', error);
-        // Filter mock data to only show users
-        setMembers(mockFamilyMembers.filter(m => m.isUser || m.userId));
+        console.error('Error loading family tree from storage:', error);
+        setFamilyMembers(mockFamilyMembers);
       }
     } else {
-      // Filter mock data to only show users (members with accounts)
-      setMembers(mockFamilyMembers.filter(m => m.isUser || m.userId));
+      setFamilyMembers(mockFamilyMembers);
     }
   }, []);
 
-  // Save users to localStorage whenever they change
+  // Save family tree to localStorage whenever it changes
   useEffect(() => {
-    if (members.length > 0) {
-      // Ensure all members are marked as users
-      const usersWithAccount = members.map(m => ({ ...m, isUser: true }));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(usersWithAccount));
+    if (familyMembers.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(familyMembers));
     }
-  }, [members]);
+  }, [familyMembers]);
 
   // Redirect if not admin
   if (user?.role !== 'admin') {
@@ -89,14 +83,14 @@ export default function AdminMembersPage() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Access denied. Only administrators can manage members.
+            Access denied. Only administrators can manage the family tree.
           </AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  const filteredMembers = members.filter(member =>
+  const filteredMembers = familyMembers.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.relationship.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.occupation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -143,9 +137,7 @@ export default function AdminMembersPage() {
       occupation: '',
       location: '',
       parents: [],
-      children: [],
-      isUser: true, // New members are always users
-      userId: undefined // Will be set when linked to a User account
+      children: []
     };
     setEditingMember(newMember);
     setIsAddingMember(true);
@@ -171,15 +163,15 @@ export default function AdminMembersPage() {
     }
 
     if (isAddingMember) {
-      setMembers([...members, editingMember]);
+      setFamilyMembers([...familyMembers, editingMember]);
       toast({
-        title: 'Member Added',
-        description: `${editingMember.name} has been added successfully.`,
+        title: 'Family Member Added',
+        description: `${editingMember.name} has been added to the family tree.`,
       });
     } else {
-      setMembers(members.map(m => m.id === editingMember.id ? editingMember : m));
+      setFamilyMembers(familyMembers.map(m => m.id === editingMember.id ? editingMember : m));
       toast({
-        title: 'Member Updated',
+        title: 'Family Member Updated',
         description: `${editingMember.name} has been updated successfully.`,
       });
     }
@@ -197,10 +189,10 @@ export default function AdminMembersPage() {
   const handleDeleteConfirm = () => {
     if (!memberToDelete) return;
 
-    const member = members.find(m => m.id === memberToDelete);
+    const member = familyMembers.find(m => m.id === memberToDelete);
     if (member) {
       // Remove references to this member from other members
-      const updatedMembers = members
+      const updatedMembers = familyMembers
         .filter(m => m.id !== memberToDelete)
         .map(m => {
           const updated = { ...m };
@@ -223,10 +215,10 @@ export default function AdminMembersPage() {
           return updated;
         });
 
-      setMembers(updatedMembers);
+      setFamilyMembers(updatedMembers);
       toast({
-        title: 'Member Deleted',
-        description: `${member.name} has been deleted successfully.`,
+        title: 'Family Member Deleted',
+        description: `${member.name} has been removed from the family tree.`,
       });
     }
 
@@ -255,14 +247,14 @@ export default function AdminMembersPage() {
   };
 
   const getMemberName = (memberId: string) => {
-    return members.find(m => m.id === memberId)?.name || memberId;
+    return familyMembers.find(m => m.id === memberId)?.name || memberId;
   };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Members</h1>
-        <p className="text-gray-600">Add, edit, and manage users and admins who have access to the site</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Family Tree</h1>
+        <p className="text-gray-600">Add, edit, and organize all family members in your family tree</p>
         <Badge variant="outline" className="mt-2">
           <Shield className="w-3 h-3 mr-1" />
           Admin Access
@@ -277,7 +269,7 @@ export default function AdminMembersPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Search members..."
+                  placeholder="Search family members..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -286,7 +278,7 @@ export default function AdminMembersPage() {
             </div>
             <Button onClick={handleAddMember} className="bg-emerald-600 hover:bg-emerald-700">
               <UserPlus className="w-4 h-4 mr-2" />
-              Add Member
+              Add Family Member
             </Button>
           </div>
         </CardContent>
@@ -364,7 +356,7 @@ export default function AdminMembersPage() {
       <Dialog open={!!viewingMember} onOpenChange={() => setViewingMember(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Member Details</DialogTitle>
+            <DialogTitle>Family Member Details</DialogTitle>
           </DialogHeader>
           
           {viewingMember && (
@@ -474,7 +466,7 @@ export default function AdminMembersPage() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {isAddingMember ? 'Add New Member' : 'Edit Member'}
+              {isAddingMember ? 'Add New Family Member' : 'Edit Family Member'}
             </DialogTitle>
           </DialogHeader>
           
@@ -594,7 +586,7 @@ export default function AdminMembersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {members
+                      {familyMembers
                         .filter(m => m.id !== editingMember.id)
                         .map(member => (
                           <SelectItem key={member.id} value={member.id}>
@@ -611,7 +603,7 @@ export default function AdminMembersPage() {
                 <div>
                   <Label>Parents</Label>
                   <div className="mt-2 space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
-                    {members
+                    {familyMembers
                       .filter(m => m.id !== editingMember.id)
                       .map(member => (
                         <div key={member.id} className="flex items-center space-x-2">
@@ -628,7 +620,7 @@ export default function AdminMembersPage() {
                           </Label>
                         </div>
                       ))}
-                    {members.filter(m => m.id !== editingMember.id).length === 0 && (
+                    {familyMembers.filter(m => m.id !== editingMember.id).length === 0 && (
                       <p className="text-sm text-gray-500">No other members available</p>
                     )}
                   </div>
@@ -637,7 +629,7 @@ export default function AdminMembersPage() {
                 <div>
                   <Label>Children</Label>
                   <div className="mt-2 space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
-                    {members
+                    {familyMembers
                       .filter(m => m.id !== editingMember.id)
                       .map(member => (
                         <div key={member.id} className="flex items-center space-x-2">
@@ -654,7 +646,7 @@ export default function AdminMembersPage() {
                           </Label>
                         </div>
                       ))}
-                    {members.filter(m => m.id !== editingMember.id).length === 0 && (
+                    {familyMembers.filter(m => m.id !== editingMember.id).length === 0 && (
                       <p className="text-sm text-gray-500">No other members available</p>
                     )}
                   </div>
@@ -709,11 +701,12 @@ export default function AdminMembersPage() {
       {filteredMembers.length === 0 && (
         <Card className="text-center py-12">
           <CardContent>
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No members found matching your search.</p>
+            <Network className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">No family members found matching your search.</p>
           </CardContent>
         </Card>
       )}
     </div>
   );
 }
+

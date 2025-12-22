@@ -9,6 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, Mail, Lock, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
+import logo from '../../public/image/logo.svg';
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -42,10 +45,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-600 rounded-full mb-4">
-            <Users className="w-8 h-8 text-white" />
+            <Image 
+              src={logo}
+              alt="gemidalogo" 
+              width={50}
+              height={50}/>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">FamilyTree</h1>
-          <p className="text-gray-600 mt-2">Connect with your family heritage</p>
+          <h1 className="text-3xl font-bold text-gray-900">Gemida Family</h1>
+          <p className="text-gray-600 mt-2">Mga Kaliwat ni Cresenciano og Ricarda</p>
         </div>
 
         <Card className="shadow-xl border-0">

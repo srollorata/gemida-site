@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -21,9 +22,11 @@ import {
   Settings,
   LogOut,
   UserCog,
-  FileText
+  FileText,
+  Network
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import logo from '../../public/image/logo.svg';
 
 const Navigation = () => {
   const { user, logout } = useAuth();
@@ -38,6 +41,7 @@ const Navigation = () => {
 
   const adminNavigation = [
     { name: 'Manage Members', href: '/admin/members', icon: UserCog },
+    { name: 'Manage Family Tree', href: '/admin/family-tree', icon: Network },
     { name: 'Manage Content', href: '/admin/content', icon: FileText },
   ];
 
@@ -50,9 +54,13 @@ const Navigation = () => {
           <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
+              <Image 
+              src={logo}
+              alt="gemidalogo" 
+              width={25}
+              height={25}/>
               </div>
-              <span className="text-xl font-bold text-gray-900">FamilyTree</span>
+              <span className="text-xl font-bold text-gray-900">Gemida Family</span>
             </Link>
           </div>
 

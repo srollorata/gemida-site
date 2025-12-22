@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model FamilyMember {
+  id           String        @id
+  name         String
+  birthDate    DateTime
+  deathDate    DateTime?     // optional
+  profileImage String?
+  relationship String?
+  spouseId     String?       // references another FamilyMember
+  spouse       FamilyMember? @relation("SpouseRelation", fields: [spouseId], references: [id], map: "FamilyMember_spouse_fkey")
+  spouses      FamilyMember[] @relation("SpouseRelation")
+  children     FamilyMember[] @relation("ParentChildRelation")
+  parents      FamilyMember[] @relation("ChildParentRelation")
+  childOf      FamilyMember[] @relation("ParentChildRelation")
+  parentOf     FamilyMember[] @relation("ChildParentRelation")
+  biography    String?
+  occupation   String?
+  location     String?
+  isUser       Boolean       @default(false)
+  user         User?
+  userId       String?       @unique // optional, links to User
+
+  // Relations for parent/child
+  parentLinks  ParentChild[] @relation("ChildParent")
+  childLinks   ParentChild[] @relation("ParentChild")
+  
+  // Relations for events and timeline
+  eventsParticipated Event[] @relation("EventParticipants")
+  timelineEvents     TimelineEvent[] @relation("TimelineFamilyMember")
+  timelineRelated    TimelineEvent[] @relation("TimelineRelatedMembers")
+}
+
+model ParentChild {
+  id             String        @id @default(uuid())
+  parentId       String
+  childId        String
+  parent         FamilyMember  @relation("ParentChild", fields: [parentId], references: [id])
+  child          FamilyMember  @relation("ChildParent", fields: [childId], references: [id])
+}
+
+model User {
+  id             String        @id
+  name           String
+  email          String        @unique
+  password       String
+  role           String
+  profileImage   String?
+  familyMember   FamilyMember? @relation(fields: [familyMemberId], references: [id])
+  familyMemberId String?       @unique
+  eventsCreated  Event[]       @relation("EventCreatedBy")
+}
+
+model Event {
+  id           String      @id
+  title        String
+  description  String
+  date         DateTime
+  type         String
+  location     String?
+  createdById  String
+  createdBy    User        @relation("EventCreatedBy", fields: [createdById], references: [id])
+  createdAt    DateTime
+  participants FamilyMember[] @relation("EventParticipants")
+  photos       String[]    // URLs
+}
+
+model TimelineEvent {
+  id              String      @id
+  title           String
+  date            DateTime
+  description     String
+  type            String
+  familyMemberId  String?
+  familyMember    FamilyMember? @relation("TimelineFamilyMember", fields: [familyMemberId], references: [id])
+  relatedMembers  FamilyMember[] @relation("TimelineRelatedMembers")
+}
