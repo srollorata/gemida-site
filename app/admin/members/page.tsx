@@ -36,51 +36,68 @@ import {
   Search,
   Eye
 } from 'lucide-react';
-import { mockFamilyMembers } from '@/data/mockData';
-import { FamilyMember } from '@/types';
-
-const STORAGE_KEY = 'users-data'; // Only for users/admins with accounts
+import { User } from '@/types';
+import { apiRequest } from '@/lib/api-client';
 
 export default function AdminMembersPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [members, setMembers] = useState<FamilyMember[]>([]);
-  const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
+  const [members, setMembers] = useState<User[]>([]);
+  const [editingMember, setEditingMember] = useState<User | null>(null);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
-  const [viewingMember, setViewingMember] = useState<FamilyMember | null>(null);
+  const [viewingMember, setViewingMember] = useState<User | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [familyMembers, setFamilyMembers] = useState<any[]>([]);
 
-  // Load users (members with accounts) from localStorage or use mock data
+  // Load users from API
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
+    const fetchUsers = async () => {
       try {
-        const storedMembers = JSON.parse(stored);
-        // Filter to only include users (members with accounts)
-        const usersOnly = storedMembers.filter((m: FamilyMember) => m.isUser || m.userId);
-        setMembers(usersOnly);
+        setIsLoading(true);
+        const response = await apiRequest('/api/users');
+        if (response.ok) {
+          const data = await response.json();
+          setMembers(data.users || []);
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to load users',
+          });
+        }
       } catch (error) {
-        console.error('Error loading users from storage:', error);
-        // Filter mock data to only show users
-        setMembers(mockFamilyMembers.filter(m => m.isUser || m.userId));
+        console.error('Error loading users:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to load users',
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      // Filter mock data to only show users (members with accounts)
-      setMembers(mockFamilyMembers.filter(m => m.isUser || m.userId));
-    }
-  }, []);
+    };
 
-  // Save users to localStorage whenever they change
-  useEffect(() => {
-    if (members.length > 0) {
-      // Ensure all members are marked as users
-      const usersWithAccount = members.map(m => ({ ...m, isUser: true }));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(usersWithAccount));
+    const fetchFamilyMembers = async () => {
+      try {
+        const response = await apiRequest('/api/family-members');
+        if (response.ok) {
+          const data = await response.json();
+          setFamilyMembers(data.familyMembers || []);
+        }
+      } catch (error) {
+        console.error('Error loading family members:', error);
+      }
+    };
+
+    if (user) {
+      fetchUsers();
+      fetchFamilyMembers();
     }
-  }, [members]);
+  }, [user, toast]);
 
   // Redirect if not admin
   if (user?.role !== 'admin') {
@@ -98,34 +115,29 @@ export default function AdminMembersPage() {
 
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.relationship.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.occupation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.location?.toLowerCase().includes(searchTerm.toLowerCase())
+    member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const validateMember = (member: FamilyMember): boolean => {
+  const validateMember = (member: User): boolean => {
     const errors: Record<string, string> = {};
     
     if (!member.name || member.name.trim() === '') {
       errors.name = 'Name is required';
     }
     
-    if (!member.relationship || member.relationship.trim() === '') {
-      errors.relationship = 'Relationship is required';
+    if (!member.email || member.email.trim() === '') {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email)) {
+      errors.email = 'Invalid email format';
     }
     
-    if (member.birthDate && new Date(member.birthDate) > new Date()) {
-      errors.birthDate = 'Birth date cannot be in the future';
+    if (isAddingMember && !(member as any).password) {
+      errors.password = 'Password is required';
     }
     
-    if (member.deathDate && member.birthDate) {
-      if (new Date(member.deathDate) < new Date(member.birthDate)) {
-        errors.deathDate = 'Death date cannot be before birth date';
-      }
-    }
-    
-    if (member.spouse && member.spouse === member.id) {
-      errors.spouse = 'A member cannot be their own spouse';
+    if (!member.role) {
+      errors.role = 'Role is required';
     }
     
     setFormErrors(errors);
@@ -133,32 +145,26 @@ export default function AdminMembersPage() {
   };
 
   const handleAddMember = () => {
-    const newMember: FamilyMember = {
-      id: `fm-${Date.now()}`,
+    const newMember: User & { password?: string } = {
+      id: '', // Will be generated by API
       name: '',
-      relationship: '',
-      birthDate: '',
+      email: '',
+      role: 'member',
       profileImage: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-      biography: '',
-      occupation: '',
-      location: '',
-      parents: [],
-      children: [],
-      isUser: true, // New members are always users
-      userId: undefined // Will be set when linked to a User account
+      password: '',
     };
     setEditingMember(newMember);
     setIsAddingMember(true);
     setFormErrors({});
   };
 
-  const handleEditMember = (member: FamilyMember) => {
+  const handleEditMember = (member: User) => {
     setEditingMember({ ...member });
     setIsAddingMember(false);
     setFormErrors({});
   };
 
-  const handleSaveMember = () => {
+  const handleSaveMember = async () => {
     if (!editingMember) return;
 
     if (!validateMember(editingMember)) {
@@ -170,23 +176,68 @@ export default function AdminMembersPage() {
       return;
     }
 
-    if (isAddingMember) {
-      setMembers([...members, editingMember]);
-      toast({
-        title: 'Member Added',
-        description: `${editingMember.name} has been added successfully.`,
+    try {
+      const url = isAddingMember
+        ? '/api/users'
+        : `/api/users/${editingMember.id}`;
+      const method = isAddingMember ? 'POST' : 'PUT';
+
+      const payload: any = {
+        name: editingMember.name,
+        email: editingMember.email,
+        role: editingMember.role,
+        profileImage: editingMember.profileImage,
+        familyMemberId: editingMember.familyMemberId,
+      };
+
+      if (isAddingMember && (editingMember as any).password) {
+        payload.password = (editingMember as any).password;
+      } else if (!isAddingMember && (editingMember as any).password) {
+        payload.password = (editingMember as any).password;
+      }
+
+      const response = await apiRequest(url, {
+        method,
+        body: JSON.stringify(payload),
       });
-    } else {
-      setMembers(members.map(m => m.id === editingMember.id ? editingMember : m));
+
+      if (response.ok) {
+        const data = await response.json();
+        const savedUser = data.user;
+
+        if (isAddingMember) {
+          setMembers([...members, savedUser]);
+          toast({
+            title: 'Member Added',
+            description: `${savedUser.name} has been added successfully.`,
+          });
+        } else {
+          setMembers(members.map(m => m.id === savedUser.id ? savedUser : m));
+          toast({
+            title: 'Member Updated',
+            description: `${savedUser.name} has been updated successfully.`,
+          });
+        }
+
+        setEditingMember(null);
+        setIsAddingMember(false);
+        setFormErrors({});
+      } else {
+        const error = await response.json();
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.error || 'Failed to save user',
+        });
+      }
+    } catch (error) {
+      console.error('Error saving user:', error);
       toast({
-        title: 'Member Updated',
-        description: `${editingMember.name} has been updated successfully.`,
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to save user',
       });
     }
-
-    setEditingMember(null);
-    setIsAddingMember(false);
-    setFormErrors({});
   };
 
   const handleDeleteClick = (memberId: string) => {
@@ -194,39 +245,41 @@ export default function AdminMembersPage() {
     setDeleteConfirmOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!memberToDelete) return;
 
     const member = members.find(m => m.id === memberToDelete);
-    if (member) {
-      // Remove references to this member from other members
-      const updatedMembers = members
-        .filter(m => m.id !== memberToDelete)
-        .map(m => {
-          const updated = { ...m };
-          
-          // Remove from parents array
-          if (updated.parents?.includes(memberToDelete)) {
-            updated.parents = updated.parents.filter(id => id !== memberToDelete);
-          }
-          
-          // Remove from children array
-          if (updated.children?.includes(memberToDelete)) {
-            updated.children = updated.children.filter(id => id !== memberToDelete);
-          }
-          
-          // Remove spouse reference
-          if (updated.spouse === memberToDelete) {
-            updated.spouse = undefined;
-          }
-          
-          return updated;
-        });
+    if (!member) {
+      setDeleteConfirmOpen(false);
+      setMemberToDelete(null);
+      return;
+    }
 
-      setMembers(updatedMembers);
+    try {
+      const response = await apiRequest(`/api/users/${memberToDelete}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setMembers(members.filter(m => m.id !== memberToDelete));
+        toast({
+          title: 'Member Deleted',
+          description: `${member.name} has been deleted successfully.`,
+        });
+      } else {
+        const error = await response.json();
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.error || 'Failed to delete user',
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
       toast({
-        title: 'Member Deleted',
-        description: `${member.name} has been deleted successfully.`,
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete user',
       });
     }
 
@@ -234,24 +287,13 @@ export default function AdminMembersPage() {
     setMemberToDelete(null);
   };
 
-  const updateEditingMember = (field: keyof FamilyMember, value: any) => {
+  const updateEditingMember = (field: keyof User, value: any) => {
     if (!editingMember) return;
     setEditingMember({ ...editingMember, [field]: value });
     // Clear error for this field when user starts typing
     if (formErrors[field]) {
       setFormErrors({ ...formErrors, [field]: '' });
     }
-  };
-
-  const toggleRelationship = (type: 'parents' | 'children', memberId: string) => {
-    if (!editingMember) return;
-    
-    const current = editingMember[type] || [];
-    const updated = current.includes(memberId)
-      ? current.filter(id => id !== memberId)
-      : [...current, memberId];
-    
-    updateEditingMember(type, updated);
   };
 
   const getMemberName = (memberId: string) => {
@@ -310,21 +352,12 @@ export default function AdminMembersPage() {
                 </h3>
                 
                 <Badge variant="secondary" className="mb-3">
-                  {member.relationship}
+                  {member.role}
                 </Badge>
                 
-                {member.isUser && (
-                  <Badge variant="outline" className="mb-3 text-emerald-600 border-emerald-600">
-                    <Users className="w-3 h-3 mr-1" />
-                    Site Member
-                  </Badge>
-                )}
-                
-                {member.birthDate && (
-                  <p className="text-sm text-gray-600 mb-4">
-                    Born {new Date(member.birthDate).getFullYear()}
-                  </p>
-                )}
+                <p className="text-sm text-gray-600 mb-4">
+                  {member.email}
+                </p>
                 
                 <div className="flex gap-2 w-full">
                   <Button
@@ -378,72 +411,28 @@ export default function AdminMembersPage() {
                 </Avatar>
                 <div>
                   <h3 className="text-2xl font-bold">{viewingMember.name}</h3>
-                  <Badge variant="secondary" className="mt-1">{viewingMember.relationship}</Badge>
+                  <Badge variant="secondary" className="mt-1">{viewingMember.role}</Badge>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {viewingMember.birthDate && (
+                <div>
+                  <Label className="text-sm text-gray-500">Email</Label>
+                  <p className="font-medium">{viewingMember.email}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">Role</Label>
+                  <p className="font-medium">{viewingMember.role}</p>
+                </div>
+                {viewingMember.familyMemberId && (
                   <div>
-                    <Label className="text-sm text-gray-500">Birth Date</Label>
-                    <p className="font-medium">{new Date(viewingMember.birthDate).toLocaleDateString()}</p>
-                  </div>
-                )}
-                {viewingMember.deathDate && (
-                  <div>
-                    <Label className="text-sm text-gray-500">Death Date</Label>
-                    <p className="font-medium">{new Date(viewingMember.deathDate).toLocaleDateString()}</p>
-                  </div>
-                )}
-                {viewingMember.occupation && (
-                  <div>
-                    <Label className="text-sm text-gray-500">Occupation</Label>
-                    <p className="font-medium">{viewingMember.occupation}</p>
-                  </div>
-                )}
-                {viewingMember.location && (
-                  <div>
-                    <Label className="text-sm text-gray-500">Location</Label>
-                    <p className="font-medium">{viewingMember.location}</p>
+                    <Label className="text-sm text-gray-500">Linked Family Member</Label>
+                    <p className="font-medium">
+                      {familyMembers.find(fm => fm.id === viewingMember.familyMemberId)?.name || viewingMember.familyMemberId}
+                    </p>
                   </div>
                 )}
               </div>
-
-              {viewingMember.biography && (
-                <div>
-                  <Label className="text-sm text-gray-500">Biography</Label>
-                  <p className="mt-1">{viewingMember.biography}</p>
-                </div>
-              )}
-
-              {viewingMember.spouse && (
-                <div>
-                  <Label className="text-sm text-gray-500">Spouse</Label>
-                  <p className="font-medium">{getMemberName(viewingMember.spouse)}</p>
-                </div>
-              )}
-
-              {viewingMember.parents && viewingMember.parents.length > 0 && (
-                <div>
-                  <Label className="text-sm text-gray-500">Parents</Label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {viewingMember.parents.map(parentId => (
-                      <Badge key={parentId} variant="outline">{getMemberName(parentId)}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {viewingMember.children && viewingMember.children.length > 0 && (
-                <div>
-                  <Label className="text-sm text-gray-500">Children</Label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {viewingMember.children.map(childId => (
-                      <Badge key={childId} variant="outline">{getMemberName(childId)}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className="flex gap-4 justify-end">
                 <Button
@@ -496,65 +485,76 @@ export default function AdminMembersPage() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="relationship">Relationship *</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input
-                    id="relationship"
-                    value={editingMember.relationship}
-                    onChange={(e) => updateEditingMember('relationship', e.target.value)}
-                    placeholder="e.g., Father, Mother, Son, Daughter"
-                    className={formErrors.relationship ? 'border-red-500' : ''}
+                    id="email"
+                    type="email"
+                    value={editingMember.email}
+                    onChange={(e) => updateEditingMember('email', e.target.value)}
+                    placeholder="Enter email address"
+                    className={formErrors.email ? 'border-red-500' : ''}
                   />
-                  {formErrors.relationship && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.relationship}</p>
+                  {formErrors.email && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
                   )}
                 </div>
                 
                 <div>
-                  <Label htmlFor="birthDate">Birth Date</Label>
-                  <Input
-                    id="birthDate"
-                    type="date"
-                    value={editingMember.birthDate || ''}
-                    onChange={(e) => updateEditingMember('birthDate', e.target.value)}
-                    className={formErrors.birthDate ? 'border-red-500' : ''}
-                  />
-                  {formErrors.birthDate && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.birthDate}</p>
+                  <Label htmlFor="role">Role *</Label>
+                  <Select
+                    value={editingMember.role}
+                    onValueChange={(value) => updateEditingMember('role', value)}
+                  >
+                    <SelectTrigger className={formErrors.role ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="member">Member</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formErrors.role && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.role}</p>
                   )}
                 </div>
                 
-                <div>
-                  <Label htmlFor="deathDate">Death Date (if applicable)</Label>
-                  <Input
-                    id="deathDate"
-                    type="date"
-                    value={editingMember.deathDate || ''}
-                    onChange={(e) => updateEditingMember('deathDate', e.target.value)}
-                    className={formErrors.deathDate ? 'border-red-500' : ''}
-                  />
-                  {formErrors.deathDate && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.deathDate}</p>
-                  )}
-                </div>
+                {isAddingMember && (
+                  <div>
+                    <Label htmlFor="password">Password *</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={(editingMember as any).password || ''}
+                      onChange={(e) => setEditingMember({ ...editingMember, password: e.target.value } as any)}
+                      placeholder="Enter password"
+                      className={formErrors.password ? 'border-red-500' : ''}
+                    />
+                    {formErrors.password && (
+                      <p className="text-sm text-red-500 mt-1">{formErrors.password}</p>
+                    )}
+                  </div>
+                )}
                 
                 <div>
-                  <Label htmlFor="occupation">Occupation</Label>
-                  <Input
-                    id="occupation"
-                    value={editingMember.occupation || ''}
-                    onChange={(e) => updateEditingMember('occupation', e.target.value)}
-                    placeholder="Enter occupation"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={editingMember.location || ''}
-                    onChange={(e) => updateEditingMember('location', e.target.value)}
-                    placeholder="Enter current location"
-                  />
+                  <Label htmlFor="familyMemberId">Link to Family Member</Label>
+                  <Select
+                    value={editingMember.familyMemberId || 'none'}
+                    onValueChange={(value) => updateEditingMember('familyMemberId', value === 'none' ? undefined : value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select family member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {familyMembers
+                        .filter(fm => !fm.userId || fm.userId === editingMember.id)
+                        .map(fm => (
+                          <SelectItem key={fm.id} value={fm.id}>
+                            {fm.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
@@ -568,98 +568,18 @@ export default function AdminMembersPage() {
                 />
               </div>
               
-              <div>
-                <Label htmlFor="biography">Biography</Label>
-                <Textarea
-                  id="biography"
-                  value={editingMember.biography || ''}
-                  onChange={(e) => updateEditingMember('biography', e.target.value)}
-                  placeholder="Enter a brief biography..."
-                  rows={4}
-                />
-              </div>
-
-              {/* Relationship Management */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold">Family Relationships</h3>
-                
+              {!isAddingMember && (
                 <div>
-                  <Label htmlFor="spouse">Spouse</Label>
-                  <Select
-                    value={editingMember.spouse || 'none'}
-                    onValueChange={(value) => updateEditingMember('spouse', value === 'none' ? undefined : value)}
-                  >
-                    <SelectTrigger className={formErrors.spouse ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select spouse" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {members
-                        .filter(m => m.id !== editingMember.id)
-                        .map(member => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  {formErrors.spouse && (
-                    <p className="text-sm text-red-500 mt-1">{formErrors.spouse}</p>
-                  )}
+                  <Label htmlFor="password">New Password (leave blank to keep current)</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={(editingMember as any).password || ''}
+                    onChange={(e) => setEditingMember({ ...editingMember, password: e.target.value } as any)}
+                    placeholder="Enter new password"
+                  />
                 </div>
-
-                <div>
-                  <Label>Parents</Label>
-                  <div className="mt-2 space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
-                    {members
-                      .filter(m => m.id !== editingMember.id)
-                      .map(member => (
-                        <div key={member.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`parent-${member.id}`}
-                            checked={editingMember.parents?.includes(member.id) || false}
-                            onCheckedChange={() => toggleRelationship('parents', member.id)}
-                          />
-                          <Label
-                            htmlFor={`parent-${member.id}`}
-                            className="font-normal cursor-pointer"
-                          >
-                            {member.name}
-                          </Label>
-                        </div>
-                      ))}
-                    {members.filter(m => m.id !== editingMember.id).length === 0 && (
-                      <p className="text-sm text-gray-500">No other members available</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Children</Label>
-                  <div className="mt-2 space-y-2 max-h-32 overflow-y-auto border rounded-md p-2">
-                    {members
-                      .filter(m => m.id !== editingMember.id)
-                      .map(member => (
-                        <div key={member.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`child-${member.id}`}
-                            checked={editingMember.children?.includes(member.id) || false}
-                            onCheckedChange={() => toggleRelationship('children', member.id)}
-                          />
-                          <Label
-                            htmlFor={`child-${member.id}`}
-                            className="font-normal cursor-pointer"
-                          >
-                            {member.name}
-                          </Label>
-                        </div>
-                      ))}
-                    {members.filter(m => m.id !== editingMember.id).length === 0 && (
-                      <p className="text-sm text-gray-500">No other members available</p>
-                    )}
-                  </div>
-                </div>
-              </div>
+              )}
               
               <div className="flex gap-4 justify-end">
                 <Button
@@ -706,14 +626,21 @@ export default function AdminMembersPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {filteredMembers.length === 0 && (
+      {isLoading ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+            <p className="text-gray-500">Loading members...</p>
+          </CardContent>
+        </Card>
+      ) : filteredMembers.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">No members found matching your search.</p>
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 }

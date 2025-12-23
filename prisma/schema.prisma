@@ -14,9 +14,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 model FamilyMember {
-  id           String        @id
+  id           String        @id @default(cuid())
   name         String
-  birthDate    DateTime
+  birthDate    DateTime?     // optional
   deathDate    DateTime?     // optional
   profileImage String?
   relationship String?
@@ -53,7 +53,7 @@ model ParentChild {
 }
 
 model User {
-  id             String        @id
+  id             String        @id @default(cuid())
   name           String
   email          String        @unique
   password       String
@@ -62,10 +62,12 @@ model User {
   familyMember   FamilyMember? @relation(fields: [familyMemberId], references: [id])
   familyMemberId String?       @unique
   eventsCreated  Event[]       @relation("EventCreatedBy")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 }
 
 model Event {
-  id           String      @id
+  id           String      @id @default(cuid())
   title        String
   description  String
   date         DateTime
@@ -73,13 +75,13 @@ model Event {
   location     String?
   createdById  String
   createdBy    User        @relation("EventCreatedBy", fields: [createdById], references: [id])
-  createdAt    DateTime
+  createdAt    DateTime    @default(now())
   participants FamilyMember[] @relation("EventParticipants")
   photos       String[]    // URLs
 }
 
 model TimelineEvent {
-  id              String      @id
+  id              String      @id @default(cuid())
   title           String
   date            DateTime
   description     String

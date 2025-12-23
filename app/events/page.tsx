@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,9 @@ import {
   Search,
   Filter
 } from 'lucide-react';
-import { mockEvents, mockFamilyMembers } from '@/data/mockData';
 import { Event } from '@/types';
+import { apiRequest } from '@/lib/api-client';
+import { useAuth } from '@/context/AuthContext';
 
 const eventTypeIcons = {
   birthday: Gift,
@@ -45,15 +46,49 @@ const eventTypeColors = {
 };
 
 export default function EventsPage() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        const [eventsRes, familyRes] = await Promise.all([
+          apiRequest('/api/events'),
+          apiRequest('/api/family-members'),
+        ]);
+
+        if (eventsRes.ok) {
+          const eventsData = await eventsRes.json();
+          setEvents(eventsData.events || []);
+        }
+
+        if (familyRes.ok) {
+          const familyData = await familyRes.json();
+          setFamilyMembers(familyData.familyMembers || []);
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   const getFamilyMemberById = (id: string) => {
-    return mockFamilyMembers.find(member => member.id === id);
+    return familyMembers.find(member => member.id === id);
   };
 
-  const filteredEvents = mockEvents.filter(event => {
+  const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || event.type === selectedType;
