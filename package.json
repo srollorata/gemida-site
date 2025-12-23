@@ -75,6 +75,8 @@
     "tailwindcss": "3.3.3",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.2.2",
+    "uploadthing": "^7.0.0",
+    "@uploadthing/react": "^7.0.0",
     "vaul": "^0.9.9",
     "zod": "^3.23.8"
   },

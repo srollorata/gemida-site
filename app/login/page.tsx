@@ -112,20 +112,19 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-2">Demo Accounts:</h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div>
-                  <strong>Admin:</strong> admin@family.com / admin123
-                </div>
-                <div>
-                  <strong>Member:</strong> michael@family.com / member123
-                </div>
-                <div>
-                  <strong>Member:</strong> emily@family.com / member123
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2">Demo Accounts (Dev Only):</h3>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div>
+                    <strong>Admin:</strong> admin@family.com / admin123
+                  </div>
+                  <div>
+                    <strong>Member:</strong> user@family.com / user123
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

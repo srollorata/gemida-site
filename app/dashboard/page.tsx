@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,17 +14,60 @@ import {
   TrendingUp,
   Gift,
   Camera,
-  Star
+  Star,
+  Loader2
 } from 'lucide-react';
-import { mockEvents, mockFamilyMembers, mockTimelineEvents } from '@/data/mockData';
+import { apiRequest } from '@/lib/api-client';
+import { Event, FamilyMember, TimelineEvent } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        const [eventsRes, familyRes, timelineRes] = await Promise.all([
+          apiRequest('/api/events'),
+          apiRequest('/api/family-members'),
+          apiRequest('/api/timeline-events'),
+        ]);
+
+        if (eventsRes.ok) {
+          const eventsData = await eventsRes.json();
+          setEvents(eventsData.events || []);
+        }
+
+        if (familyRes.ok) {
+          const familyData = await familyRes.json();
+          setFamilyMembers(familyData.familyMembers || []);
+        }
+
+        if (timelineRes.ok) {
+          const timelineData = await timelineRes.json();
+          setTimelineEvents(timelineData.timelineEvents || []);
+        }
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   if (!user) return null;
 
-  const recentEvents = mockEvents.slice(0, 3);
-  const upcomingBirthdays = mockFamilyMembers
+  const recentEvents = events.slice(0, 3);
+  const upcomingBirthdays = familyMembers
     .filter(member => member.birthDate)
     .map(member => {
       const today = new Date();
@@ -46,32 +89,91 @@ export default function DashboardPage() {
     .sort((a, b) => a.daysUntil - b.daysUntil)
     .slice(0, 3);
 
+  // Calculate years of history from earliest timeline event or family member birth date
+  const earliestDate = Math.min(
+    ...timelineEvents.map(e => new Date(e.date).getFullYear()),
+    ...familyMembers
+      .filter(m => m.birthDate)
+      .map(m => new Date(m.birthDate!).getFullYear())
+  );
+  const yearsOfHistory = earliestDate && !isNaN(earliestDate) 
+    ? new Date().getFullYear() - earliestDate 
+    : 0;
+
   const stats = [
     {
       title: 'Family Members',
-      value: mockFamilyMembers.length,
+      value: familyMembers.length,
       icon: Users,
       color: 'text-emerald-600'
     },
     {
       title: 'Events Recorded',
-      value: mockEvents.length,
+      value: events.length,
       icon: Calendar,
       color: 'text-blue-600'
     },
     {
       title: 'Timeline Events',
-      value: mockTimelineEvents.length,
+      value: timelineEvents.length,
       icon: Clock,
       color: 'text-purple-600'
     },
     {
       title: 'Years of History',
-      value: new Date().getFullYear() - 1955,
+      value: yearsOfHistory,
       icon: Heart,
       color: 'text-red-600'
     }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="mb-8">
+          <Skeleton className="h-10 w-64 mb-2" />
+          <Skeleton className="h-6 w-96" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48 mt-2" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-20" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48 mt-2" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-20" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">

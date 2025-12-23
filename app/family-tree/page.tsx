@@ -1,14 +1,52 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, UserCheck, Crown, ChevronDown, ChevronRight, TreePine } from 'lucide-react';
-import { mockFamilyMembers } from '@/data/mockData';
+import { Users, UserCheck, Crown, TreePine, Loader2 } from 'lucide-react';
+import { apiRequest } from '@/lib/api-client';
+import { FamilyMember } from '@/types';
 import FamilyTreeGoJS from '@/components/FamilyTreeGoJS';
 
 export default function FamilyTreePage() {
+  const { user } = useAuth();
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        const familyRes = await apiRequest('/api/family-members');
+
+        if (familyRes.ok) {
+          const familyData = await familyRes.json();
+          setFamilyMembers(familyData.familyMembers || []);
+        }
+      } catch (error) {
+        console.error('Error loading family members:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="mb-8">
@@ -34,7 +72,7 @@ export default function FamilyTreePage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <FamilyTreeGoJS />
+          <FamilyTreeGoJS familyMembers={familyMembers} />
         </CardContent>
       </Card>
       {/* Family Statistics */}
@@ -42,7 +80,7 @@ export default function FamilyTreePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <Users className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900">{mockFamilyMembers.length}</p>
+            <p className="text-2xl font-bold text-gray-900">{familyMembers.length}</p>
             <p className="text-sm text-gray-600">Total Members</p>
           </CardContent>
         </Card>
@@ -50,7 +88,7 @@ export default function FamilyTreePage() {
           <CardContent className="p-6 text-center">
             <UserCheck className="w-8 h-8 text-blue-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">
-              {mockFamilyMembers.filter(m => m.isUser).length}
+              {familyMembers.filter(m => m.isUser).length}
             </p>
             <p className="text-sm text-gray-600">Site Members</p>
           </CardContent>
@@ -59,8 +97,7 @@ export default function FamilyTreePage() {
           <CardContent className="p-6 text-center">
             <Crown className="w-8 h-8 text-amber-600 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">
-              {/* Number of root family branches (members without parents) */}
-              {mockFamilyMembers.filter(m => !m.parents || m.parents.length === 0).length}
+              {familyMembers.filter(m => !m.parents || m.parents.length === 0).length}
             </p>
             <p className="text-sm text-gray-600">Family Branches</p>
           </CardContent>

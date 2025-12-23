@@ -24,6 +24,7 @@ import {
 import { Event } from '@/types';
 import { apiRequest } from '@/lib/api-client';
 import { useAuth } from '@/context/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const eventTypeIcons = {
   birthday: Gift,
@@ -142,8 +143,25 @@ export default function EventsPage() {
       </Card>
 
       {/* Events Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {sortedEvents.map((event) => {
+      {isLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-0">
+                <Skeleton className="h-48 w-full rounded-t-lg" />
+                <div className="p-6">
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-2/3 mb-4" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {sortedEvents.map((event) => {
           const IconComponent = eventTypeIcons[event.type];
           const colorClass = eventTypeColors[event.type];
           
@@ -309,9 +327,10 @@ export default function EventsPage() {
             </Card>
           );
         })}
-      </div>
+        </div>
+      )}
 
-      {sortedEvents.length === 0 && (
+      {!isLoading && sortedEvents.length === 0 && (
         <Card className="text-center py-12">
           <CardContent>
             <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />

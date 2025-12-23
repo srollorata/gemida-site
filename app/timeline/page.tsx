@@ -20,6 +20,7 @@ import {
 import { TimelineEvent } from '@/types';
 import { apiRequest } from '@/lib/api-client';
 import { useAuth } from '@/context/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const eventTypeIcons = {
   birth: Baby,
@@ -150,12 +151,32 @@ export default function TimelinePage() {
       </Card>
 
       {/* Timeline */}
-      <div className="relative">
-        {/* Timeline line */}
-        <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+      {isLoading ? (
+        <div className="relative">
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+          <div className="space-y-8">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="relative flex items-start">
+                <Skeleton className="w-16 h-16 rounded-full border-4 border-white" />
+                <Card className="ml-8 flex-1">
+                  <CardContent className="p-6">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-2/3 mb-4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="relative">
+          {/* Timeline line */}
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
-        <div className="space-y-8">
-          {sortedEvents.map((event, index) => {
+          <div className="space-y-8">
+            {sortedEvents.map((event, index) => {
             const IconComponent = eventTypeIcons[event.type];
             const colorClass = eventTypeColors[event.type];
             const familyMember = event.familyMemberId ? getFamilyMemberById(event.familyMemberId) : null;
@@ -203,7 +224,7 @@ export default function TimelinePage() {
                               <Avatar className="w-8 h-8">
                                 <AvatarImage src={familyMember.profileImage} alt={familyMember.name} />
                                 <AvatarFallback className="text-xs">
-                                  {familyMember.name.split(' ').map(n => n[0]).join('')}
+                                  {familyMember.name.split(' ').map((n: string) => n[0]).join('')}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm font-medium">{familyMember.name}</span>
@@ -215,7 +236,7 @@ export default function TimelinePage() {
                               <Avatar className="w-8 h-8">
                                 <AvatarImage src={member.profileImage} alt={member.name} />
                                 <AvatarFallback className="text-xs">
-                                  {member.name.split(' ').map(n => n[0]).join('')}
+                                  {member.name.split(' ').map((n: string) => n[0]).join('')}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm font-medium">{member.name}</span>
@@ -231,8 +252,9 @@ export default function TimelinePage() {
           })}
         </div>
       </div>
+      )}
 
-      {sortedEvents.length === 0 && (
+      {!isLoading && sortedEvents.length === 0 && (
         <Card className="text-center py-12">
           <CardContent>
             <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />

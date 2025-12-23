@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { User } from '@/types';
 import { apiRequest } from '@/lib/api-client';
+import { ImageUpload } from '@/components/ImageUpload';
 
 export default function AdminMembersPage() {
   const { user } = useAuth();
@@ -559,12 +560,12 @@ export default function AdminMembersPage() {
               </div>
               
               <div>
-                <Label htmlFor="profileImage">Profile Image URL</Label>
-                <Input
-                  id="profileImage"
+                <Label htmlFor="profileImage">Profile Image</Label>
+                <ImageUpload
                   value={editingMember.profileImage || ''}
-                  onChange={(e) => updateEditingMember('profileImage', e.target.value)}
-                  placeholder="Enter image URL"
+                  onChange={(url) => updateEditingMember('profileImage', typeof url === 'string' ? url : url[0] || '')}
+                  multiple={false}
+                  className="mt-2"
                 />
               </div>
               
