@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Event, TimelineEvent } from '@/types';
 import { apiRequest } from '@/lib/api-client';
+import { ImageUpload } from '@/components/ImageUpload';
 
 export default function AdminContentPage() {
   const { user } = useAuth();
@@ -543,6 +544,17 @@ export default function AdminContentPage() {
                   onChange={(e) => setEditingEvent({...editingEvent, description: e.target.value})}
                   placeholder="Enter event description..."
                   rows={4}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="eventPhotos">Event Photos</Label>
+                <ImageUpload
+                  value={editingEvent.photos || []}
+                  onChange={(urls) => setEditingEvent({...editingEvent, photos: Array.isArray(urls) ? urls : [urls]})}
+                  multiple={true}
+                  maxFiles={10}
+                  className="mt-2"
                 />
               </div>
               

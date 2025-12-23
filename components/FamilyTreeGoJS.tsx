@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as go from 'gojs';
-import { mockFamilyMembers } from '@/data/mockData';
 import { FamilyMember } from '@/types';
 
 // Transform FamilyMember[] to GoJS node/link data
@@ -30,7 +29,11 @@ function getGoJSData(members: FamilyMember[]) {
   return { nodes, links };
 }
 
-const FamilyTreeGoJS: React.FC = () => {
+interface FamilyTreeGoJSProps {
+  familyMembers: FamilyMember[];
+}
+
+const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
   const diagramRef = useRef<HTMLDivElement>(null);
   const diagramInstanceRef = useRef<go.Diagram | null>(null);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
@@ -38,9 +41,9 @@ const FamilyTreeGoJS: React.FC = () => {
   const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
-    if (!diagramRef.current) return;
+    if (!diagramRef.current || familyMembers.length === 0) return;
     const $ = go.GraphObject.make;
-    const { nodes, links } = getGoJSData(mockFamilyMembers);
+    const { nodes, links } = getGoJSData(familyMembers);
 
     const diagram = $(go.Diagram, diagramRef.current, {
       initialContentAlignment: go.Spot.Center,
@@ -126,7 +129,7 @@ const FamilyTreeGoJS: React.FC = () => {
       const part = e.subject.part;
       if (part instanceof go.Node) {
         const key = part.data.key;
-        const member = mockFamilyMembers.find(m => m.id === key);
+        const member = familyMembers.find(m => m.id === key);
         setSelectedMember(member || null);
         setShowPanel(true); // Automatically show panel when member is selected
       }
@@ -147,7 +150,7 @@ const FamilyTreeGoJS: React.FC = () => {
       diagram.div = null; 
       diagramInstanceRef.current = null;
     };
-  }, []);
+  }, [familyMembers]);
 
   // Zoom control functions
   const zoomIn = () => {
