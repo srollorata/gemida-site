@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,9 @@ import {
   Clock,
   Filter
 } from 'lucide-react';
-import { mockTimelineEvents, mockFamilyMembers } from '@/data/mockData';
 import { TimelineEvent } from '@/types';
+import { apiRequest } from '@/lib/api-client';
+import { useAuth } from '@/context/AuthContext';
 
 const eventTypeIcons = {
   birth: Baby,
@@ -41,11 +42,45 @@ const eventTypeColors = {
 };
 
 export default function TimelinePage() {
+  const { user } = useAuth();
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedDecade, setSelectedDecade] = useState<string>('all');
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        const [timelineRes, familyRes] = await Promise.all([
+          apiRequest('/api/timeline-events'),
+          apiRequest('/api/family-members'),
+        ]);
+
+        if (timelineRes.ok) {
+          const timelineData = await timelineRes.json();
+          setTimelineEvents(timelineData.timelineEvents || []);
+        }
+
+        if (familyRes.ok) {
+          const familyData = await familyRes.json();
+          setFamilyMembers(familyData.familyMembers || []);
+        }
+      } catch (error) {
+        console.error('Error loading timeline events:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   const getFamilyMemberById = (id: string) => {
-    return mockFamilyMembers.find(member => member.id === id);
+    return familyMembers.find(member => member.id === id);
   };
 
   const getDecade = (date: string) => {
@@ -53,7 +88,7 @@ export default function TimelinePage() {
     return Math.floor(year / 10) * 10;
   };
 
-  const filteredEvents = mockTimelineEvents.filter(event => {
+  const filteredEvents = timelineEvents.filter(event => {
     const matchesType = selectedType === 'all' || event.type === selectedType;
     const decade = getDecade(event.date);
     const matchesDecade = selectedDecade === 'all' || decade.toString() === selectedDecade;
@@ -65,7 +100,7 @@ export default function TimelinePage() {
   );
 
   const decades = Array.from(
-    new Set(mockTimelineEvents.map(event => getDecade(event.date)))
+    new Set(timelineEvents.map(event => getDecade(event.date)))
   ).sort((a, b) => a - b);
 
   return (
