@@ -25,8 +25,9 @@ import { Event } from '@/types';
 import { apiRequest } from '@/lib/api-client';
 import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import EventForm from '@/components/EventForm';
 
-const eventTypeIcons = {
+const eventTypeIcons: Record<string, React.ComponentType<any>> = {
   birthday: Gift,
   wedding: Heart,
   graduation: GraduationCap,
@@ -36,7 +37,7 @@ const eventTypeIcons = {
   other: Calendar
 };
 
-const eventTypeColors = {
+const eventTypeColors: Record<string, string> = {
   birthday: 'bg-pink-100 text-pink-700',
   wedding: 'bg-red-100 text-red-700',
   graduation: 'bg-blue-100 text-blue-700',
@@ -50,38 +51,54 @@ export default function EventsPage() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedMemberId, setSelectedMemberId] = useState<string>('all');
+  const [fromDate, setFromDate] = useState<string | null>(null);
+  const [toDate, setToDate] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-      
-      try {
-        setIsLoading(true);
-        const [eventsRes, familyRes] = await Promise.all([
-          apiRequest('/api/events'),
-          apiRequest('/api/family-members'),
-        ]);
+  // Pull fetch into outer scope so it can be reused after creating an event
+  const fetchData = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
 
-        if (eventsRes.ok) {
-          const eventsData = await eventsRes.json();
-          setEvents(eventsData.events || []);
-        }
+      // Build query parameters based on active filters
+      const params = new URLSearchParams();
+      if (selectedStatus && selectedStatus !== 'all') params.set('status', selectedStatus);
+      if (selectedType && selectedType !== 'all') params.set('type', selectedType);
+      if (fromDate) params.set('from', new Date(fromDate).toISOString());
+      if (toDate) params.set('to', new Date(toDate).toISOString());
+      if (selectedMemberId && selectedMemberId !== 'all') params.set('familyMemberId', selectedMemberId);
 
-        if (familyRes.ok) {
-          const familyData = await familyRes.json();
-          setFamilyMembers(familyData.familyMembers || []);
-        }
-      } catch (error) {
-        console.error('Error loading events:', error);
-      } finally {
-        setIsLoading(false);
+      const eventsPath = `/api/events${params.toString() ? `?${params.toString()}` : ''}`;
+
+      const [eventsRes, familyRes] = await Promise.all([
+        apiRequest(eventsPath),
+        apiRequest('/api/family-members'),
+      ]);
+
+      if (eventsRes.ok) {
+        const eventsData = await eventsRes.json();
+        setEvents(eventsData.events || []);
       }
-    };
 
+      if (familyRes.ok) {
+        const familyData = await familyRes.json();
+        setFamilyMembers(familyData.familyMembers || []);
+      }
+    } catch (error) {
+      console.error('Error loading events:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, [user]);
 
@@ -110,7 +127,7 @@ export default function EventsPage() {
       {/* Filters */}
       <Card className="mb-8">
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -122,22 +139,59 @@ export default function EventsPage() {
                 />
               </div>
             </div>
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Events</SelectItem>
-                <SelectItem value="birthday">Birthdays</SelectItem>
-                <SelectItem value="wedding">Weddings</SelectItem>
-                <SelectItem value="graduation">Graduations</SelectItem>
-                <SelectItem value="reunion">Reunions</SelectItem>
-                <SelectItem value="achievement">Achievements</SelectItem>
-                <SelectItem value="memorial">Memorials</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+
+            <div className="flex gap-2 items-center">
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger className="w-44">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="birthday">Birthdays</SelectItem>
+                  <SelectItem value="wedding">Weddings</SelectItem>
+                  <SelectItem value="graduation">Graduations</SelectItem>
+                  <SelectItem value="reunion">Reunions</SelectItem>
+                  <SelectItem value="achievement">Achievements</SelectItem>
+                  <SelectItem value="memorial">Memorials</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Family member" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All members</SelectItem>
+                  {familyMembers.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="flex items-center gap-2">
+                <Input type="date" value={fromDate || ''} onChange={(e) => setFromDate(e.target.value || null)} className="w-40" />
+                <Input type="date" value={toDate || ''} onChange={(e) => setToDate(e.target.value || null)} className="w-40" />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button onClick={() => fetchData()}>Apply</Button>
+                <Button variant="ghost" onClick={() => { setSelectedStatus('all'); setSelectedType('all'); setSelectedMemberId('all'); setFromDate(null); setToDate(null); fetchData(); }}>Clear</Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -160,10 +214,18 @@ export default function EventsPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {sortedEvents.map((event) => {
-          const IconComponent = eventTypeIcons[event.type];
-          const colorClass = eventTypeColors[event.type];
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            
+            <div>
+              {/* spacer column */}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {sortedEvents.map((event) => {
+              const typeKey = (event.type || '').toString().toLowerCase();
+              const IconComponent = eventTypeIcons[typeKey] || Calendar;
+              const colorClass = eventTypeColors[typeKey] || eventTypeColors['other'];
           
           return (
             <Card key={event.id} className="hover:shadow-lg transition-shadow">
@@ -221,7 +283,7 @@ export default function EventsPage() {
                           <Avatar key={participantId} className="w-8 h-8 border-2 border-white">
                             <AvatarImage src={participant.profileImage} alt={participant.name} />
                             <AvatarFallback className="text-xs">
-                              {participant.name.split(' ').map(n => n[0]).join('')}
+                              {participant.name.split(' ').map((n: string) => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                         ) : null;
@@ -308,7 +370,7 @@ export default function EventsPage() {
                                       <Avatar className="w-6 h-6">
                                         <AvatarImage src={participant.profileImage} alt={participant.name} />
                                         <AvatarFallback className="text-xs">
-                                          {participant.name.split(' ').map(n => n[0]).join('')}
+                                          {participant.name.split(' ').map((n: string) => n[0]).join('')}
                                         </AvatarFallback>
                                       </Avatar>
                                       <span className="text-sm">{participant.name}</span>
@@ -325,18 +387,19 @@ export default function EventsPage() {
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
-        </div>
-      )}
+        );
+      })}
+      </div>
 
-      {!isLoading && sortedEvents.length === 0 && (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No events found matching your criteria.</p>
-          </CardContent>
-        </Card>
+          {!isLoading && sortedEvents.length === 0 && (
+            <Card className="text-center py-12">
+              <CardContent>
+                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No events found matching your criteria.</p>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

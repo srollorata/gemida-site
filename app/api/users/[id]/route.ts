@@ -20,15 +20,6 @@ export async function GET(
     
     const user = await prisma.user.findUnique({
       where: { id: params.id },
-      include: {
-        familyMember: {
-          select: {
-            id: true,
-            name: true,
-            profileImage: true,
-          },
-        },
-      },
       select: {
         id: true,
         name: true,
@@ -36,7 +27,13 @@ export async function GET(
         role: true,
         profileImage: true,
         familyMemberId: true,
-        familyMember: true,
+        familyMember: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -100,15 +97,6 @@ export async function PUT(
     const user = await prisma.user.update({
       where: { id: params.id },
       data: updateData,
-      include: {
-        familyMember: {
-          select: {
-            id: true,
-            name: true,
-            profileImage: true,
-          },
-        },
-      },
       select: {
         id: true,
         name: true,
@@ -116,7 +104,13 @@ export async function PUT(
         role: true,
         profileImage: true,
         familyMemberId: true,
-        familyMember: true,
+        familyMember: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },

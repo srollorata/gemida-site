@@ -22,7 +22,7 @@ import { apiRequest } from '@/lib/api-client';
 import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const eventTypeIcons = {
+const eventTypeIcons: Record<string, React.ComponentType<any>> = {
   birth: Baby,
   death: Skull,
   marriage: Heart,
@@ -32,7 +32,7 @@ const eventTypeIcons = {
   other: Calendar
 };
 
-const eventTypeColors = {
+const eventTypeColors: Record<string, string> = {
   birth: 'bg-green-100 text-green-700 border-green-200',
   death: 'bg-gray-100 text-gray-700 border-gray-200',
   marriage: 'bg-red-100 text-red-700 border-red-200',
@@ -177,8 +177,9 @@ export default function TimelinePage() {
 
           <div className="space-y-8">
             {sortedEvents.map((event, index) => {
-            const IconComponent = eventTypeIcons[event.type];
-            const colorClass = eventTypeColors[event.type];
+            const typeKey = (event.type || '').toString().toLowerCase();
+            const IconComponent = eventTypeIcons[typeKey] || Calendar;
+            const colorClass = eventTypeColors[typeKey] || eventTypeColors['other'];
             const familyMember = event.familyMemberId ? getFamilyMemberById(event.familyMemberId) : null;
             const relatedMembers = event.relatedMembers?.map(id => getFamilyMemberById(id)).filter(Boolean) || [];
 

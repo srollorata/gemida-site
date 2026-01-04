@@ -128,9 +128,11 @@ export async function DELETE(
   try {
     requireAuth(request);
     
-    await prisma.timelineEvent.delete({
-      where: { id: params.id },
-    });
+    const result = await prisma.timelineEvent.deleteMany({ where: { id: params.id } });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Timeline event not found' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

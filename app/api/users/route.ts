@@ -8,15 +8,6 @@ export async function GET(request: NextRequest) {
     requireAdmin(request);
     
     const users = await prisma.user.findMany({
-      include: {
-        familyMember: {
-          select: {
-            id: true,
-            name: true,
-            profileImage: true,
-          },
-        },
-      },
       select: {
         id: true,
         name: true,
@@ -24,7 +15,13 @@ export async function GET(request: NextRequest) {
         role: true,
         profileImage: true,
         familyMemberId: true,
-        familyMember: true,
+        familyMember: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -85,15 +82,6 @@ export async function POST(request: NextRequest) {
         profileImage,
         familyMemberId: familyMemberId || null,
       },
-      include: {
-        familyMember: {
-          select: {
-            id: true,
-            name: true,
-            profileImage: true,
-          },
-        },
-      },
       select: {
         id: true,
         name: true,
@@ -101,7 +89,13 @@ export async function POST(request: NextRequest) {
         role: true,
         profileImage: true,
         familyMemberId: true,
-        familyMember: true,
+        familyMember: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
