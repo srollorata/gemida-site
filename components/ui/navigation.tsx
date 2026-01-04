@@ -21,6 +21,7 @@ import {
   Clock,
   Settings,
   LogOut,
+  User,
   UserCog,
   FileText,
   Network
@@ -84,29 +85,7 @@ const Navigation = () => {
               );
             })}
             
-            {user.role === 'admin' && (
-              <>
-                <div className="border-l border-gray-200 mx-2" />
-                {adminNavigation.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        'inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                        pathname === item.href
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      )}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </>
-            )}
+
           </div>
 
           <div className="flex items-center space-x-4">
@@ -129,6 +108,36 @@ const Navigation = () => {
                     <p className="text-xs text-emerald-600 capitalize">{user.role}</p>
                   </div>
                 </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="flex items-center">
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                {user.role === 'admin' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/members" className="flex items-center">
+                        <UserCog className="w-4 h-4 mr-2" />
+                        Manage Members
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/family-tree" className="flex items-center">
+                        <Network className="w-4 h-4 mr-2" />
+                        Manage Family Tree
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/content" className="flex items-center">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Manage Content
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="w-4 h-4 mr-2" />

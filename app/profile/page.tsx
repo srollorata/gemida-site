@@ -71,16 +71,15 @@ export default function ProfilePage() {
     loadUserData();
   }, [user, router, toast]);
 
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveProfile = async (updateFields: Partial<typeof formData>) => {
     setError('');
     setSuccess('');
     setIsSaving(true);
 
     try {
-      const response = await apiRequest(`/api/users/${user?.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(formData),
+      const response = await apiRequest(`/api/users/me`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateFields),
       });
 
       if (response.ok) {
@@ -90,12 +89,15 @@ export default function ProfilePage() {
           title: 'Success',
           description: 'Your profile has been updated',
         });
-        
-        // Update local storage with new user data
-        localStorage.setItem('family-site-user', JSON.stringify(data.user));
-        
-        // Reload page to refresh auth context
-        window.location.reload();
+
+        try {
+          window.dispatchEvent(new CustomEvent('auth:profile-updated', { detail: data.user }));
+        } catch (err) {
+          localStorage.setItem('family-site-user', JSON.stringify(data.user));
+        }
+
+        // Merge returned user data into form state
+        setFormData((prev) => ({ ...prev, name: data.user.name, email: data.user.email, profileImage: data.user.profileImage || '' }));
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to update profile');
@@ -106,6 +108,11 @@ export default function ProfilePage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveProfile(formData);
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -126,8 +133,8 @@ export default function ProfilePage() {
     setIsChangingPassword(true);
 
     try {
-      const response = await apiRequest(`/api/users/${user?.id}`, {
-        method: 'PUT',
+      const response = await apiRequest(`/api/users/me`, {
+        method: 'PATCH',
         body: JSON.stringify({
           password: passwordData.newPassword,
         }),
@@ -248,7 +255,14 @@ export default function ProfilePage() {
                 <Label htmlFor="profileImage">Profile Image</Label>
                 <ImageUpload
                   value={formData.profileImage || ''}
-                  onChange={(url) => setFormData({ ...formData, profileImage: typeof url === 'string' ? url : url[0] || '' })}
+                  onChange={(url) => {
+                    const img = typeof url === 'string' ? url : url[0] || '';
+                    setFormData({ ...formData, profileImage: img });
+                    // Auto-save avatar when an image is uploaded/selected
+                    if (img) {
+                      void saveProfile({ profileImage: img });
+                    }
+                  }}
                   multiple={false}
                   className="mt-2"
                 />
