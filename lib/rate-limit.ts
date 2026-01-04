@@ -111,10 +111,10 @@ export function resetRateLimit(identifier: string): void {
  * Clean up expired entries from the store
  */
 function cleanupExpiredEntries(now: number): void {
-  for (const [key, entry] of rateLimitStore.entries()) {
+  rateLimitStore.forEach((entry, key) => {
     if (now > entry.resetTime) {
       rateLimitStore.delete(key);
     }
-  }
+  });
 }
 

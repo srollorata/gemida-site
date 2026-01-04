@@ -21,7 +21,7 @@ export const ourFileRouter = {
       // This middleware can be used for additional validation
       return {};
     })
-    .onUploadComplete(async ({ metadata, file }) => {
+    .onUploadComplete(async ({ metadata, file }: { metadata?: { userId?: string; updateProfile?: boolean }, file: { url: string } }) => {
       console.log("Upload complete");
       console.log("file url", file.url);
 
@@ -49,7 +49,7 @@ export const ourFileRouter = {
       // This middleware can be used for additional validation
       return {};
     })
-    .onUploadComplete(async ({ metadata, file }) => {
+    .onUploadComplete(async ({ metadata, file }: { metadata?: { userId?: string; updateProfile?: boolean }, file: { url: string } }) => {
       console.log("Upload complete");
       console.log("file url", file.url);
 

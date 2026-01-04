@@ -100,6 +100,7 @@ JWT_SECRET="a_long_random_secret"
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 - `npm run seed` - Run the prisma seed script
+- `npm test` - Run unit tests (Vitest)
 
 ---
 

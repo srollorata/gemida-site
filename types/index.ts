@@ -11,6 +11,7 @@ export interface FamilyMember {
   id: string;
   name: string;
   birthDate?: string;
+  weddingDate?: string;
   deathDate?: string;
   profileImage?: string;
   relationship: string;
@@ -29,7 +30,9 @@ export interface Event {
   title: string;
   description: string;
   date: string;
-  type: 'birthday' | 'wedding' | 'graduation' | 'reunion' | 'memorial' | 'achievement' | 'other';
+  type: string; // flexible - maps to EventType
+  status?: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  completedAt?: string;
   participants: string[];
   photos?: string[];
   location?: string;
@@ -42,7 +45,10 @@ export interface TimelineEvent {
   title: string;
   date: string;
   description: string;
-  type: 'birth' | 'death' | 'marriage' | 'graduation' | 'career' | 'achievement' | 'other';
+  type: string;
   familyMemberId?: string;
   relatedMembers?: string[];
+  isAutoAdded?: boolean;
+  sourceEventId?: string;
+  isComputed?: boolean; // computed from family member dates
 }

@@ -13,10 +13,26 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// Enums for stricter typing
+enum EventStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum EventType {
+  PLAN
+  TIMELINE
+  MILESTONE
+  OTHER
+}
+
 model FamilyMember {
   id           String        @id @default(cuid())
   name         String
   birthDate    DateTime?     // optional
+  weddingDate  DateTime?     // optional
   deathDate    DateTime?     // optional
   profileImage String?
   relationship String?
@@ -71,13 +87,17 @@ model Event {
   title        String
   description  String
   date         DateTime
-  type         String
+  type         EventType
+  status       EventStatus @default(PENDING)
   location     String?
   createdById  String
   createdBy    User        @relation("EventCreatedBy", fields: [createdById], references: [id])
   createdAt    DateTime    @default(now())
+  completedAt  DateTime?
   participants FamilyMember[] @relation("EventParticipants")
   photos       String[]    // URLs
+  // Optional back-reference to a generated TimelineEvent (one-to-one)
+  timelineEntry TimelineEvent? @relation("EventToTimeline")
 }
 
 model TimelineEvent {
@@ -89,4 +109,8 @@ model TimelineEvent {
   familyMemberId  String?
   familyMember    FamilyMember? @relation("TimelineFamilyMember", fields: [familyMemberId], references: [id])
   relatedMembers  FamilyMember[] @relation("TimelineRelatedMembers")
+  // If this timeline event was created from an Event, keep a reference
+  sourceEventId   String?       @unique
+  sourceEvent     Event?        @relation("EventToTimeline", fields: [sourceEventId], references: [id])
+  isAutoAdded     Boolean       @default(false)
 }

@@ -84,7 +84,7 @@ export function ImageUpload({
       {/* Upload component */}
       <div className="space-y-2">
         {multiple ? (
-          <UploadDropzone<OurFileRouter>
+          <UploadDropzone<OurFileRouter, 'multipleImageUploader'>
             endpoint="multipleImageUploader"
             onClientUploadComplete={handleUploadComplete}
             onUploadError={handleUploadError}
@@ -102,7 +102,7 @@ export function ImageUpload({
             }}
           />
         ) : (
-          <UploadButton<OurFileRouter>
+          <UploadButton<OurFileRouter, 'imageUploader'>
             endpoint="imageUploader"
             onClientUploadComplete={handleUploadComplete}
             onUploadError={handleUploadError}
