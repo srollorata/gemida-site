@@ -8,6 +8,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
+  updateUser: (user: User) => void;
 }
 
 interface TokenPayload {
@@ -106,8 +107,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     window.addEventListener('auth:session-invalid', handleSessionInvalid);
+
+    // Listen for profile updates dispatched elsewhere in the app
+    const handleProfileUpdated = (e: Event) => {
+      try {
+        // detail may contain updated user object
+        const detail = (e as CustomEvent).detail;
+        if (detail && typeof detail === 'object') {
+          setUser(detail as User);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(detail));
+        }
+      } catch (err) {
+        console.error('Failed to handle profile updated event', err);
+      }
+    };
+
+    window.addEventListener('auth:profile-updated', handleProfileUpdated as EventListener);
+
     return () => {
       window.removeEventListener('auth:session-invalid', handleSessionInvalid);
+      window.removeEventListener('auth:profile-updated', handleProfileUpdated as EventListener);
     };
   }, []);
 
@@ -265,6 +284,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Update user in context and localStorage without full reload
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    try {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+    } catch (err) {
+      console.warn('Failed to store updated user', err);
+    }
+  };
+
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem(USER_STORAGE_KEY);
@@ -274,7 +304,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

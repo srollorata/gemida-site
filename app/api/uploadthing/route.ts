@@ -12,8 +12,13 @@ export const { GET, POST } = createRouteHandler({
     if (!auth) {
       throw new UploadThingError("Unauthorized - Please log in to upload files");
     }
+
+    // Allow optional query flag `updateProfile=true` to instruct onUploadComplete to update the user's profileImage
+    const updateProfileParam = req.nextUrl?.searchParams?.get('updateProfile');
+    const updateProfile = updateProfileParam === 'true' || updateProfileParam === '1';
+
     // Return metadata that will be available in onUploadComplete
-    return { userId: auth.userId };
+    return { userId: auth.userId, updateProfile };
   },
 });
 

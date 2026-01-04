@@ -24,6 +24,22 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete");
       console.log("file url", file.url);
+
+      // Optional: update user's profile image automatically when requested.
+      // If the client includes a flag `updateProfile` in the request metadata, update the user's profileImage.
+      try {
+        if (metadata?.userId && metadata?.updateProfile) {
+          // Import prisma lazily to avoid circular/edge issues
+          const { prisma } = await import('@/lib/prisma');
+          await prisma.user.update({
+            where: { id: metadata.userId },
+            data: { profileImage: file.url },
+          });
+        }
+      } catch (err) {
+        console.error('Failed to update user profile from upload:', err);
+      }
+
       return { uploadedBy: metadata?.userId };
     }),
   
@@ -36,6 +52,22 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete");
       console.log("file url", file.url);
+
+      // Optional: update user's profile image automatically when requested.
+      // If the client includes a flag `updateProfile` in the request metadata, update the user's profileImage.
+      try {
+        if (metadata?.userId && metadata?.updateProfile) {
+          // Import prisma lazily to avoid circular/edge issues
+          const { prisma } = await import('@/lib/prisma');
+          await prisma.user.update({
+            where: { id: metadata.userId },
+            data: { profileImage: file.url },
+          });
+        }
+      } catch (err) {
+        console.error('Failed to update user profile from upload:', err);
+      }
+
       return { uploadedBy: metadata?.userId };
     }),
 } satisfies FileRouter;
