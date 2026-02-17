@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, handleApiError } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, handleApiError } from '@/lib/api-helpers';
 
 export async function GET(
   request: NextRequest,
@@ -86,7 +86,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    requireAuth(request);
+    // Only admins may update family members
+    requireAdmin(request);
     
     const body = await request.json();
     const {
@@ -217,7 +218,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    requireAuth(request);
+    // Only admins may delete family members
+    requireAdmin(request);
     
     // Delete parent-child relationships first
     await prisma.parentChild.deleteMany({

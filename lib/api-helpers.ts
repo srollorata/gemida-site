@@ -10,13 +10,22 @@ interface JWTPayload {
 }
 
 export function getAuthUser(request: NextRequest): { userId: string; role: string } | null {
-  // Extract token from Authorization header
+  // Try Authorization header first
   const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
+  let token: string | null = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  } else {
+    // Fallback to cookie named 'token'
+    try {
+      const cookieToken = request.cookies.get('token')?.value;
+      if (cookieToken) token = cookieToken;
+    } catch (err) {
+      // ignore cookie parse errors
+    }
   }
 
-  const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+  if (!token) return null;
 
   if (!process.env.JWT_SECRET) {
     console.error('JWT_SECRET is not set');

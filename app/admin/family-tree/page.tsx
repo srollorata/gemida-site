@@ -53,6 +53,12 @@ export default function AdminFamilyTreePage() {
   const [viewingMember, setViewingMember] = useState<FamilyMember | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
+  // View (grid/list), sorting and pagination state
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const itemsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'name' | 'birthDate' | 'relationship'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Load family tree members from API
   useEffect(() => {
@@ -107,6 +113,38 @@ export default function AdminFamilyTreePage() {
     member.occupation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.location?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Apply sorting to filtered results
+  const sortedMembers = filteredMembers.slice().sort((a, b) => {
+    let va: any;
+    let vb: any;
+    if (sortBy === 'birthDate') {
+      va = a.birthDate ? new Date(a.birthDate).getTime() : 0;
+      vb = b.birthDate ? new Date(b.birthDate).getTime() : 0;
+    } else {
+      va = (a as any)[sortBy] ? (a as any)[sortBy].toString().toLowerCase() : '';
+      vb = (b as any)[sortBy] ? (b as any)[sortBy].toString().toLowerCase() : '';
+    }
+
+    if (va < vb) return sortOrder === 'asc' ? -1 : 1;
+    if (va > vb) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Pagination for list view
+  const totalPages = Math.max(1, Math.ceil(sortedMembers.length / itemsPerPage));
+  const paginatedMembers = sortedMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    // Reset to first page when search term, filtered count, or view mode change
+    setCurrentPage(1);
+  }, [searchTerm, sortedMembers.length, viewMode]);
+  
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const validateMember = (member: FamilyMember): boolean => {
     const errors: Record<string, string> = {};
@@ -308,7 +346,7 @@ export default function AdminFamilyTreePage() {
       {/* Header Actions */}
       <Card className="mb-8">
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -320,81 +358,168 @@ export default function AdminFamilyTreePage() {
                 />
               </div>
             </div>
-            <Button onClick={handleAddMember} className="bg-emerald-600 hover:bg-emerald-700">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Family Member
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center bg-gray-100 rounded-md p-1">
+                <Button
+                  variant={viewMode === 'grid' ? undefined : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? undefined : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  List
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="birthDate">Birth Date</SelectItem>
+                    <SelectItem value="relationship">Relationship</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button size="sm" variant="outline" onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}>
+                  {sortOrder === 'asc' ? 'Asc' : 'Desc'}
+                </Button>
+              </div>
+
+              <Button onClick={handleAddMember} className="bg-emerald-600 hover:bg-emerald-700">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Family Member
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Members Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredMembers.map((member) => (
-          <Card key={member.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center text-center">
-                <Avatar className="w-20 h-20 mb-4">
-                  <AvatarImage src={member.profileImage} alt={member.name} />
-                  <AvatarFallback className="text-lg">
-                    {member.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <h3 className="font-semibold text-lg text-gray-900 mb-1">
-                  {member.name}
-                </h3>
-                
-                <Badge variant="secondary" className="mb-3">
-                  {member.relationship}
-                </Badge>
-                
-                {member.isUser && (
-                  <Badge variant="outline" className="mb-3 text-emerald-600 border-emerald-600">
-                    <Users className="w-3 h-3 mr-1" />
-                    Site Member
+      {/* Members Grid or List */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {sortedMembers.map((member) => (
+            <Card key={member.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center">
+                  <Avatar className="w-20 h-20 mb-4">
+                    <AvatarImage src={member.profileImage} alt={member.name} />
+                    <AvatarFallback className="text-lg">
+                      {member.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                    {member.name}
+                  </h3>
+                  
+                  <Badge variant="secondary" className="mb-3">
+                    {member.relationship}
                   </Badge>
-                )}
-                
-                {member.birthDate && (
-                  <p className="text-sm text-gray-600 mb-4">
-                    Born {new Date(member.birthDate).getFullYear()}
-                  </p>
-                )}
-                
-                <div className="flex gap-2 w-full">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setViewingMember(member)}
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    View
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleEditMember(member)}
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleDeleteClick(member.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  
+                  {member.isUser && (
+                    <Badge variant="outline" className="mb-3 text-emerald-600 border-emerald-600">
+                      <Users className="w-3 h-3 mr-1" />
+                      Site Member
+                    </Badge>
+                  )}
+                  
+                  {member.birthDate && (
+                    <p className="text-sm text-gray-600 mb-4">
+                      Born {new Date(member.birthDate).getFullYear()}
+                    </p>
+                  )}
+                  
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setViewingMember(member)}
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleEditMember(member)}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDeleteClick(member.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div>
+          <div className="space-y-4">
+            {paginatedMembers.map(member => (
+              <Card key={member.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="py-3">
+                  <div className="flex items-center justify-between gap-4 min-h-[64px]">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={member.profileImage} alt={member.name} />
+                        <AvatarFallback className="text-lg">
+                          {member.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold">{member.name}</h3>
+                        <p className="text-sm text-gray-500">{member.relationship}{member.birthDate ? ` • ${new Date(member.birthDate).getFullYear()}` : ''}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" onClick={() => setViewingMember(member)}>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" onClick={() => handleEditMember(member)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" className="text-red-600" onClick={() => handleDeleteClick(member.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between mt-4">
+            <div>
+              <p className="text-sm text-gray-500">Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, sortedMembers.length)} of {sortedMembers.length}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>First</Button>
+              <Button size="sm" variant="ghost" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</Button>
+              <div className="px-3 py-1 bg-gray-100 rounded-md">Page {currentPage} of {totalPages}</div>
+              <Button size="sm" variant="ghost" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
+              <Button size="sm" variant="ghost" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>Last</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Member Dialog */}
       <Dialog open={!!viewingMember} onOpenChange={() => setViewingMember(null)}>

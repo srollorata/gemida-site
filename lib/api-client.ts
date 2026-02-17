@@ -1,16 +1,8 @@
 // Client-side API helper functions
 
-const TOKEN_STORAGE_KEY = 'family-site-token';
-
+// Using HttpOnly cookie-based sessions. No client-managed Authorization header.
 export function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-  if (!token) {
-    return {};
-  }
-
-  return {
-    'Authorization': `Bearer ${token}`,
-  };
+  return {};
 }
 
 /**
@@ -18,16 +10,9 @@ export function getAuthHeaders(): HeadersInit {
  * This can be used to refresh user data or check if session is still valid
  */
 export async function validateSession(): Promise<{ valid: boolean; user?: any }> {
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-  if (!token) {
-    return { valid: false };
-  }
-
   try {
     const response = await fetch('/api/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      credentials: 'include',
     });
 
     if (response.ok) {
@@ -49,27 +34,41 @@ export async function apiRequest(
 ): Promise<Response> {
   const headers = {
     'Content-Type': 'application/json',
-    ...getAuthHeaders(),
     ...options.headers,
   };
 
   const response = await fetch(endpoint, {
     ...options,
     headers,
+    credentials: 'include',
   });
 
   // Handle 401 Unauthorized - token might be expired
   if (response.status === 401) {
-    // Try to validate session once
+    // Try to validate session once (cookie-based)
     const session = await validateSession();
     if (!session.valid) {
       // Session is invalid, clear storage
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
       localStorage.removeItem('family-site-user');
       
       // Dispatch custom event for AuthContext to handle
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:session-invalid'));
+      }
+    }
+  }
+
+  // Handle 403 Forbidden - insufficient permissions
+  if (response.status === 403) {
+    try {
+      const body = await response.json().catch(() => ({}));
+      const message = body?.error || 'Forbidden';
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:forbidden', { detail: { message } }));
+      }
+    } catch {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:forbidden', { detail: { message: 'Forbidden' } }));
       }
     }
   }

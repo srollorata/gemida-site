@@ -17,6 +17,7 @@ export const uploadthingFetch = async (url: string, options: RequestInit = {}) =
       ...authHeaders,
       ...options.headers,
     },
+    credentials: 'include',
   });
 };
 

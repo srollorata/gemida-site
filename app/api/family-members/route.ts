@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, handleApiError } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, handleApiError } from '@/lib/api-helpers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -76,7 +76,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    requireAuth(request);
+    // Only admins may create family members
+    requireAdmin(request);
     
     const body = await request.json();
     const {

@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
     // Use email for rate limiting (more secure than IP)
     const rateLimitKey = email.toLowerCase().trim();
 
-    // Check rate limit
-    const rateLimit = checkRateLimit(rateLimitKey);
+    // Check rate limit (supports async Redis-backed limiter)
+    const rateLimit = await checkRateLimit(rateLimitKey);
     if (!rateLimit.allowed) {
       const retryAfter = rateLimit.resetTime 
         ? Math.ceil((rateLimit.resetTime - Date.now()) / 1000)
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       // Record failed attempt
-      recordFailedAttempt(rateLimitKey);
+      await recordFailedAttempt(rateLimitKey);
       
       // Generic error message to prevent user enumeration
       return NextResponse.json(
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Successful login - reset rate limit
-    resetRateLimit(rateLimitKey);
+    await resetRateLimit(rateLimitKey);
 
     // Generate JWT token with expiration (7 days)
     const token = jwt.sign(
@@ -105,8 +105,12 @@ export async function POST(request: NextRequest) {
     // Log successful login (for security monitoring)
     console.log(`Successful login: ${user.email} at ${new Date().toISOString()}`);
 
-    // Return user data and token
-    return NextResponse.json({
+    // Set token as HttpOnly, Secure cookie
+    const maxAge = 7 * 24 * 60 * 60; // 7 days in seconds
+    const isProd = process.env.NODE_ENV === 'production';
+    const cookie = `token=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; SameSite=Strict${isProd ? '; Secure' : ''}`;
+
+    const response = NextResponse.json({
       user: {
         id: user.id,
         name: user.name,
@@ -115,8 +119,10 @@ export async function POST(request: NextRequest) {
         profileImage: user.profileImage,
         familyMemberId: user.familyMemberId,
       },
-      token,
     });
+
+    response.headers.set('Set-Cookie', cookie);
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return handleApiError(error);
