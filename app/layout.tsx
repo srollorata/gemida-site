@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import Navigation from '@/components/ui/navigation';
 import { Toaster } from '@/components/ui/toaster';
 import { usePathname } from 'next/navigation';
+import AuthSessionHandler from '@/components/AuthSessionHandler';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -51,13 +52,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>FamilyTree - Connect with your family heritage</title>
+        <title>Gemida Family - Kaliwat ni Cresenciano og Ricarda</title>
         <meta name="description" content="A beautiful family site to connect, share memories, and explore your family tree" />
       </head>
       <body className={inter.className}>
         <AuthProvider>
           <AppContent>{children}</AppContent>
           <Toaster />
+          {/* Global auth session handler: listens for session invalid and forbidden events */}
+          {/* Placed inside AuthProvider so it can navigate and interact with auth state */}
+          <AuthSessionHandler />
         </AuthProvider>
       </body>
     </html>

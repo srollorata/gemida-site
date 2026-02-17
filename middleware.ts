@@ -46,7 +46,7 @@ function decodeToken(token: string): { userId?: string; role?: string; exp?: num
   }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes
@@ -71,28 +71,48 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Decode token to check role (for admin routes)
-  const decoded = decodeToken(token);
-  
+  // For admin routes, verify token server-side by calling /api/auth/me
   if (isAdminRoute(pathname)) {
-    if (!decoded || decoded.role !== 'admin') {
-      // Not admin, redirect to dashboard
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-  }
+    try {
+      const origin = request.nextUrl.origin;
+      const res = await fetch(`${origin}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        // ensure cookies are included if needed
+        credentials: 'include',
+      });
 
-  // Check if token is expired (basic check)
-  if (decoded?.exp) {
-    const expiresAt = decoded.exp * 1000;
-    if (Date.now() >= expiresAt) {
-      // Token expired, redirect to login
+      if (res.status === 200) {
+        const user = await res.json();
+        if (user?.role === 'admin') {
+          return NextResponse.next();
+        }
+        // Authenticated but not admin -> redirect to dashboard
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+
+      if (res.status === 401) {
+        // Unauthorized (expired/invalid token) -> redirect to login
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('redirect', pathname);
+        if (res.headers.get('www-authenticate')?.includes('expired')) {
+          loginUrl.searchParams.set('expired', 'true');
+        }
+        return NextResponse.redirect(loginUrl);
+      }
+
+      // Any other non-200 -> deny access to admin pages
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    } catch (err) {
+      // In case of errors verifying token, redirect to login
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
-      loginUrl.searchParams.set('expired', 'true');
       return NextResponse.redirect(loginUrl);
     }
   }
 
+  // Non-admin protected route: token present — allow and let APIs enforce auth if needed
   return NextResponse.next();
 }
 

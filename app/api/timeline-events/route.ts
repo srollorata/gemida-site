@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, handleApiError } from '@/lib/api-helpers';
+import { requireAuth, requireAdmin, handleApiError } from '@/lib/api-helpers';
 import { TimelineCreateSchema } from '@/lib/validators';
 import { autoPromotePastEvents } from '@/lib/event-helpers';
 
@@ -154,7 +154,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    requireAuth(request);
+    // Only admins may create timeline events
+    requireAdmin(request);
     
     const body = await request.json();
 

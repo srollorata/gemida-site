@@ -67,37 +67,49 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = 'Chart';
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(
-    ([_, config]) => config.theme || config.color
-  );
+const isSafeHex = (s: string) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s);
+const isSafeRgb = (s: string) => /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(0|0?\.\d+|1|1\.0+))?\s*\)$/.test(s);
+const isSafeHsl = (s: string) => /^hsla?\(.*\)$/.test(s);
 
-  if (!colorConfig.length) {
-    return null;
+function sanitizeColor(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const trimmed = input.trim();
+  if (isSafeHex(trimmed) || isSafeRgb(trimmed) || isSafeHsl(trimmed)) return trimmed;
+  // Allow a small set of safe named colors if desired
+  const safeNames = ['black', 'white', 'red', 'green', 'blue', 'transparent', 'currentColor'];
+  if (safeNames.includes(trimmed.toLowerCase())) return trimmed;
+  return null;
+}
+
+const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+  const colorConfig = Object.entries(config).filter(([, c]) => c.theme || c.color);
+
+  if (!colorConfig.length) return null;
+
+  const lines: string[] = [];
+
+  for (const [theme, prefix] of Object.entries(THEMES)) {
+    const blockLines: string[] = [];
+    for (const [key, itemConfig] of colorConfig) {
+      const rawColor = (itemConfig.theme && (itemConfig.theme as any)[theme]) || (itemConfig as any).color;
+      const color = sanitizeColor(rawColor);
+      if (color) {
+        blockLines.push(`  --color-${key}: ${color};`);
+      }
+    }
+
+    if (blockLines.length > 0) {
+      // Use quoted attribute selector to be safe
+      const selector = `${prefix} [data-chart="${id}"]`;
+      lines.push(`${selector} {`, ...blockLines, `}`);
+    }
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join('\n')}
-}
-`
-          )
-          .join('\n'),
-      }}
-    />
-  );
+  if (lines.length === 0) return null;
+
+  const cssText = lines.join('\n');
+
+  return <style>{cssText}</style>;
 };
 
 const ChartTooltip = RechartsPrimitive.Tooltip;

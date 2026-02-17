@@ -22,19 +22,29 @@ export const ourFileRouter = {
       return {};
     })
     .onUploadComplete(async ({ metadata, file }: { metadata?: { userId?: string; updateProfile?: boolean }, file: { url: string } }) => {
-      console.log("Upload complete");
-      console.log("file url", file.url);
+      console.log('Upload complete');
+      console.log('file url', file.url);
 
       // Optional: update user's profile image automatically when requested.
-      // If the client includes a flag `updateProfile` in the request metadata, update the user's profileImage.
+      // The server-side upload route should supply server-verified `userId` in metadata.
       try {
         if (metadata?.userId && metadata?.updateProfile) {
           // Import prisma lazily to avoid circular/edge issues
           const { prisma } = await import('@/lib/prisma');
-          await prisma.user.update({
-            where: { id: metadata.userId },
-            data: { profileImage: file.url },
-          });
+
+          // Verify user exists before updating
+          const user = await prisma.user.findUnique({ where: { id: metadata.userId } });
+          if (user) {
+            // Basic sanitization: ensure URL is https and not excessively long
+            if (typeof file.url === 'string' && file.url.startsWith('https://') && file.url.length < 2000) {
+              await prisma.user.update({
+                where: { id: metadata.userId },
+                data: { profileImage: file.url },
+              });
+            } else {
+              console.warn('Uploaded file URL failed basic sanitization, skipping profile update');
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to update user profile from upload:', err);
@@ -50,19 +60,23 @@ export const ourFileRouter = {
       return {};
     })
     .onUploadComplete(async ({ metadata, file }: { metadata?: { userId?: string; updateProfile?: boolean }, file: { url: string } }) => {
-      console.log("Upload complete");
-      console.log("file url", file.url);
+      console.log('Upload complete');
+      console.log('file url', file.url);
 
-      // Optional: update user's profile image automatically when requested.
-      // If the client includes a flag `updateProfile` in the request metadata, update the user's profileImage.
       try {
         if (metadata?.userId && metadata?.updateProfile) {
-          // Import prisma lazily to avoid circular/edge issues
           const { prisma } = await import('@/lib/prisma');
-          await prisma.user.update({
-            where: { id: metadata.userId },
-            data: { profileImage: file.url },
-          });
+          const user = await prisma.user.findUnique({ where: { id: metadata.userId } });
+          if (user) {
+            if (typeof file.url === 'string' && file.url.startsWith('https://') && file.url.length < 2000) {
+              await prisma.user.update({
+                where: { id: metadata.userId },
+                data: { profileImage: file.url },
+              });
+            } else {
+              console.warn('Uploaded file URL failed basic sanitization, skipping profile update');
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to update user profile from upload:', err);
