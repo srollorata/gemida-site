@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth, requireAdmin, handleApiError } from '@/lib/api-helpers';
 import { hashPassword } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

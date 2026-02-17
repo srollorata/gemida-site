@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, handleApiError } from '@/lib/api-helpers';
 
+// Force node runtime so `jsonwebtoken` can run for server-side verification
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     // requireAuth validates the JWT token

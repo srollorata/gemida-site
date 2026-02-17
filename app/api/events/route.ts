@@ -5,6 +5,9 @@ import { EventCreateSchema } from '@/lib/validators';
 import { autoPromotePastEvents } from '@/lib/event-helpers';
 import { mapToEventType } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     requireAuth(request);
