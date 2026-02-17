@@ -84,7 +84,9 @@ export async function middleware(request: NextRequest) {
       });
 
       if (res.status === 200) {
-        const user = await res.json();
+        // Support both shapes: { user: { ... } } and { ... }
+        const data = await res.json();
+        const user = data?.user ?? data;
         if (user?.role === 'admin') {
           return NextResponse.next();
         }

@@ -4,6 +4,9 @@ import { requireAuth, requireAdmin, handleApiError } from '@/lib/api-helpers';
 import { TimelineCreateSchema } from '@/lib/validators';
 import { autoPromotePastEvents } from '@/lib/event-helpers';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     requireAuth(request);

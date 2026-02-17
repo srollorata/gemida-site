@@ -4,6 +4,9 @@ import { requireAuth, handleApiError } from '@/lib/api-helpers';
 import { EventUpdateSchema } from '@/lib/validators';
 import { mapToEventType } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

@@ -31,6 +31,10 @@ Detailed Implementation Notes
 1) Fix middleware JWT verification — (completed)
 - Replaced unsigned base64 decode in `middleware.ts` with a server-side verification flow that calls `/api/auth/me` to validate the token and confirm role claims before routing. This prevents trusting client-decoded tokens for admin routing.
 - If verification fails, middleware redirects to `/login` and preserves the original redirect query param. See: [middleware.ts](middleware.ts)
+ - NOTE (2026-02-18): Updated middleware to also accept the nested response shape returned by `/api/auth/me` (`{ user: { ... } }`) and to treat server errors more explicitly.
+   - `middleware.ts` now supports both `{ user: { role } }` and direct `{ role }` payload shapes when parsing the `/api/auth/me` response.
+   - Also added `export const dynamic = 'force-dynamic'; export const runtime = 'nodejs';` to `app/api/auth/me/route.ts` so server-side JWT verification (using `jsonwebtoken`) runs in Node runtime. This fixes an issue where the `/api/auth/me` route ran in an Edge runtime and returned non-200, causing valid admin sessions to be redirected to `/dashboard`.
+   - Recommended follow-up: ensure other API routes that call `requireAuth` or import `jsonwebtoken` also set `runtime = 'nodejs'` to avoid similar runtime mismatches.
 
 2) Enforce server-side admin authorization — (partial: implemented for family-members & timeline-events)
 - Added `requireAdmin(request)` to mutating endpoints for family members and timeline events:
@@ -90,5 +94,13 @@ Next steps I will take
 
 If you want me to proceed immediately, I will start by editing `middleware.ts` (verify tokens using `lib/api-helpers`) and create a small test to confirm routing rejects tampered tokens.
 
+Status Update (2026-02-18)
+---------------------------
+- Completed: Forced Node runtime on `app/api/auth/me/route.ts` and added `runtime = 'nodejs'` + `dynamic = 'force-dynamic'` to other API routes that use `requireAuth` (users, events, family-members, timeline-events, upload). This ensures `jsonwebtoken` runs server-side and JWT verification succeeds.
+- Completed: Updated `middleware.ts` to accept both `{ user: { ... } }` and flat `{ ... }` response shapes from `/api/auth/me` and to avoid mis-classifying valid admin sessions as failures.
+- Verified: Logged in with seeded admin and confirmed admin pages load (no redirect to `/dashboard`).
+
+Next recommendation:
+- Create a small PR with these changes and run CI tests; audit any remaining `app/api` routes that import `jsonwebtoken` to ensure runtime consistency.
 ---
 
