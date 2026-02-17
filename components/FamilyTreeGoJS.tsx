@@ -79,7 +79,8 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
       }),
       'undoManager.isEnabled': true,
       'toolManager.hoverDelay': 100,
-      autoScale: go.Diagram.Uniform,
+      // Disable autoScale so manual zooming works
+      autoScale: go.Diagram.None,
       // Enable mouse wheel zooming
       'toolManager.mouseWheelBehavior': go.ToolManager.WheelZoom,
       // Default zoom factor must be > 1.0 (GoJS requirement)
@@ -211,38 +212,47 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
   // Zoom control functions
   const zoomIn = () => {
     if (diagramInstanceRef.current) {
-      const currentZoom = diagramInstanceRef.current.commandHandler.zoomFactor;
-      if (currentZoom < 4) { // max zoom 400%
-        diagramInstanceRef.current.commandHandler.increaseZoom();
+      const currentZoom = diagramInstanceRef.current.scale;
+      const zoomFactor = 1.25;
+      const newZoom = currentZoom * zoomFactor;
+      if (newZoom <= 4) { // max zoom 400%
+        diagramInstanceRef.current.scale = newZoom;
+        setZoomLevel(newZoom);
       }
     }
   };
 
   const zoomOut = () => {
     if (diagramInstanceRef.current) {
-      const currentZoom = diagramInstanceRef.current.commandHandler.zoomFactor;
-      if (currentZoom > 0.25) { // min zoom 25%
-        diagramInstanceRef.current.commandHandler.decreaseZoom();
+      const currentZoom = diagramInstanceRef.current.scale;
+      const zoomFactor = 1.25;
+      const newZoom = currentZoom / zoomFactor;
+      if (newZoom >= 0.25) { // min zoom 25%
+        diagramInstanceRef.current.scale = newZoom;
+        setZoomLevel(newZoom);
       }
     }
   };
 
   const resetZoom = () => {
     if (diagramInstanceRef.current) {
-      diagramInstanceRef.current.commandHandler.resetZoom();
+      diagramInstanceRef.current.scale = 1;
+      setZoomLevel(1);
     }
   };
 
   const fitToWindow = () => {
     if (diagramInstanceRef.current) {
       diagramInstanceRef.current.commandHandler.zoomToFit();
+      setZoomLevel(diagramInstanceRef.current.scale);
     }
   };
 
   const togglePanning = () => {
     if (diagramInstanceRef.current) {
       const tool = diagramInstanceRef.current.toolManager.panningTool;
-      tool.isActive = !tool.isActive;
+      // Toggle whether the panning tool is enabled rather than forcing active state
+      tool.isEnabled = !tool.isEnabled;
     }
   };
 
