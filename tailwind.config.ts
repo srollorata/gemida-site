@@ -63,25 +63,46 @@ const config: Config = {
       },
       keyframes: {
         'accordion-down': {
-          from: {
-            height: '0',
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)',
-          },
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
         },
         'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)',
-          },
-          to: {
-            height: '0',
-          },
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+        'gradient-shift': {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        'particle-drift': {
+          '0%': { transform: 'translateY(0) translateX(0)', opacity: '0' },
+          '10%': { opacity: '1' },
+          '90%': { opacity: '1' },
+          '100%': { transform: 'translateY(-100vh) translateX(20px)', opacity: '0' },
+        },
+        'grid-shimmer': {
+          '0%, 100%': { opacity: '0.3' },
+          '50%': { opacity: '0.6' },
+        },
+        'glow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 8px hsl(var(--glow-color) / 0.3)' },
+          '50%': { boxShadow: '0 0 20px hsl(var(--glow-color) / 0.5)' },
+        },
+        'icon-bounce': {
+          '0%, 100%': { transform: 'scale(1) rotate(0deg)' },
+          '30%': { transform: 'scale(1.2) rotate(-8deg)' },
+          '60%': { transform: 'scale(1.1) rotate(4deg)' },
+          '80%': { transform: 'scale(1.05) rotate(-2deg)' },
         },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'gradient-shift': 'gradient-shift 15s ease infinite',
+        'particle-drift': 'particle-drift 20s linear infinite',
+        'grid-shimmer': 'grid-shimmer 4s ease-in-out infinite',
+        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+        'icon-bounce': 'icon-bounce 0.5s ease-in-out',
       },
     },
   },

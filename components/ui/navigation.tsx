@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logo from '../../public/image/logo.svg';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const Navigation = () => {
   const { user, logout } = useAuth();
@@ -49,19 +50,19 @@ const Navigation = () => {
   if (!user) return null;
 
   return (
-    <nav className="bg-white border-b border-gray-200 shadow-sm">
+    <nav className="bg-background border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <Image 
-              src={logo}
-              alt="gemidalogo" 
-              width={25}
-              height={25}/>
+                <Image
+                  src={logo}
+                  alt="gemidalogo"
+                  width={25}
+                  height={25} />
               </div>
-              <span className="text-xl font-bold text-gray-900">Gemida Family</span>
+              <span className="text-xl font-bold text-foreground">Gemida Family</span>
             </Link>
           </div>
 
@@ -75,8 +76,8 @@ const Navigation = () => {
                   className={cn(
                     'inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
                     pathname === item.href
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
                 >
                   <Icon className="w-4 h-4 mr-2" />
@@ -84,11 +85,12 @@ const Navigation = () => {
                 </Link>
               );
             })}
-            
+
 
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">

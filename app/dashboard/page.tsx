@@ -20,6 +20,7 @@ import {
 import { apiRequest } from '@/lib/api-client';
 import { Event, FamilyMember, TimelineEvent } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { IconHover } from '@/components/ui/icon-hover';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -31,7 +32,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      
+
       try {
         setIsLoading(true);
         const [eventsRes, familyRes, timelineRes] = await Promise.all([
@@ -73,13 +74,13 @@ export default function DashboardPage() {
       const today = new Date();
       const birthDate = new Date(member.birthDate!);
       const thisYearBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
-      
+
       if (thisYearBirthday < today) {
         thisYearBirthday.setFullYear(today.getFullYear() + 1);
       }
-      
+
       const daysUntil = Math.ceil((thisYearBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
+
       return {
         ...member,
         daysUntil,
@@ -96,8 +97,8 @@ export default function DashboardPage() {
       .filter(m => m.birthDate)
       .map(m => new Date(m.birthDate!).getFullYear())
   );
-  const yearsOfHistory = earliestDate && !isNaN(earliestDate) 
-    ? new Date().getFullYear() - earliestDate 
+  const yearsOfHistory = earliestDate && !isNaN(earliestDate)
+    ? new Date().getFullYear() - earliestDate
     : 0;
 
   const stats = [
@@ -178,10 +179,10 @@ export default function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Welcome back, {user.name}!
         </h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Here's what's happening in your family
         </p>
         <Badge variant="secondary" className="mt-2 capitalize">
@@ -198,10 +199,10 @@ export default function DashboardPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                    <p className="text-3xl font-bold text-foreground">{stat.value}</p>
                   </div>
-                  <Icon className={`w-8 h-8 ${stat.color}`} />
+                  <IconHover><Icon className={`w-8 h-8 ${stat.color}`} /></IconHover>
                 </div>
               </CardContent>
             </Card>
@@ -214,7 +215,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Camera className="w-5 h-5 text-emerald-600" />
+              <IconHover><Camera className="w-5 h-5 text-emerald-600" /></IconHover>
               Recent Events
             </CardTitle>
             <CardDescription>
@@ -224,14 +225,14 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {recentEvents.map((event) => (
-                <div key={event.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={event.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-accent transition-colors">
                   <div className="flex-shrink-0">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900">{event.title}</p>
-                    <p className="text-sm text-gray-600">{event.description}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="font-medium text-foreground">{event.title}</p>
+                    <p className="text-sm text-muted-foreground">{event.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       {new Date(event.date).toLocaleDateString()}
                     </p>
                   </div>
@@ -248,7 +249,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Gift className="w-5 h-5 text-amber-600" />
+              <IconHover><Gift className="w-5 h-5 text-amber-600" /></IconHover>
               Upcoming Birthdays
             </CardTitle>
             <CardDescription>
@@ -258,15 +259,15 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               {upcomingBirthdays.map((member) => (
-                <div key={member.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={member.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-accent transition-colors">
                   <img
                     src={member.profileImage}
                     alt={member.name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{member.name}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-foreground">{member.name}</p>
+                    <p className="text-sm text-muted-foreground">
                       Turning {member.age + 1} in {member.daysUntil} days
                     </p>
                   </div>
@@ -287,7 +288,7 @@ export default function DashboardPage() {
       <Card className="mt-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Star className="w-5 h-5 text-purple-600" />
+            <IconHover><Star className="w-5 h-5 text-purple-600" /></IconHover>
             Quick Actions
           </CardTitle>
           <CardDescription>
@@ -298,26 +299,26 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button asChild variant="outline" className="h-20 flex-col">
               <Link href="/family-tree">
-                <Users className="w-6 h-6 mb-2" />
+                <IconHover><Users className="w-6 h-6 mb-2" /></IconHover>
                 Family Tree
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-20 flex-col">
               <Link href="/events">
-                <Calendar className="w-6 h-6 mb-2" />
+                <IconHover><Calendar className="w-6 h-6 mb-2" /></IconHover>
                 Events
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-20 flex-col">
               <Link href="/timeline">
-                <Clock className="w-6 h-6 mb-2" />
+                <IconHover><Clock className="w-6 h-6 mb-2" /></IconHover>
                 Timeline
               </Link>
             </Button>
             {user.role === 'admin' && (
               <Button asChild variant="outline" className="h-20 flex-col">
                 <Link href="/admin/members">
-                  <TrendingUp className="w-6 h-6 mb-2" />
+                  <IconHover><TrendingUp className="w-6 h-6 mb-2" /></IconHover>
                   Manage
                 </Link>
               </Button>

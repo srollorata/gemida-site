@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, Mail, Lock, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import logo from '../../public/image/logo.svg';
+import { IconHover } from '@/components/ui/icon-hover';
 
 
 export default function LoginPage() {
@@ -41,21 +42,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-600 rounded-full mb-4">
-            <Image 
-              src={logo}
-              alt="gemidalogo" 
-              width={50}
-              height={50}/>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Gemida Family</h1>
-          <p className="text-gray-600 mt-2">Mga Kaliwat ni Cresenciano og Ricarda</p>
+          <IconHover>
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-600 rounded-full mb-4">
+              <Image
+                src={logo}
+                alt="gemidalogo"
+                width={50}
+                height={50} />
+            </div>
+          </IconHover>
+          <h1 className="text-3xl font-bold text-foreground">Gemida Family</h1>
+          <p className="text-muted-foreground mt-2">Mga Kaliwat ni Cresenciano og Ricarda</p>
         </div>
 
-        <Card className="shadow-xl border-0">
+        <Card className="shadow-xl border-0 hover:shadow-[0_0_30px_hsl(var(--glow-color)/0.2)]">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
             <CardDescription className="text-center">
@@ -67,7 +70,7 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
@@ -79,11 +82,11 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
@@ -103,8 +106,8 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700"
                 disabled={isLoading}
               >
@@ -112,7 +115,7 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            
+
           </CardContent>
         </Card>
       </div>

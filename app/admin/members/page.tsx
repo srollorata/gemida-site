@@ -133,7 +133,7 @@ export default function AdminMembersPage() {
     // Reset to first page when search term, filtered members count, or view mode change
     setCurrentPage(1);
   }, [searchTerm, filteredMembers.length, viewMode]);
-  
+
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages);
@@ -142,25 +142,25 @@ export default function AdminMembersPage() {
 
   const validateMember = (member: User): boolean => {
     const errors: Record<string, string> = {};
-    
+
     if (!member.name || member.name.trim() === '') {
       errors.name = 'Name is required';
     }
-    
+
     if (!member.email || member.email.trim() === '') {
       errors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email)) {
       errors.email = 'Invalid email format';
     }
-    
+
     if (isAddingMember && !(member as any).password) {
       errors.password = 'Password is required';
     }
-    
+
     if (!member.role) {
       errors.role = 'Role is required';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -324,8 +324,8 @@ export default function AdminMembersPage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Members</h1>
-        <p className="text-gray-600">Add, edit, and manage users and admins who have access to the site</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Manage Members</h1>
+        <p className="text-muted-foreground">Add, edit, and manage users and admins who have access to the site</p>
         <Badge variant="outline" className="mt-2">
           <Shield className="w-3 h-3 mr-1" />
           Admin Access
@@ -338,7 +338,7 @@ export default function AdminMembersPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search members..."
                   value={searchTerm}
@@ -348,7 +348,7 @@ export default function AdminMembersPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center bg-gray-100 rounded-md p-1">
+              <div className="flex items-center bg-muted rounded-md p-1">
                 <Button
                   variant={viewMode === 'grid' ? undefined : 'ghost'}
                   size="sm"
@@ -387,19 +387,19 @@ export default function AdminMembersPage() {
                       {member.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  
-                  <h3 className="font-semibold text-lg text-gray-900 mb-1">
+
+                  <h3 className="font-semibold text-lg text-foreground mb-1">
                     {member.name}
                   </h3>
-                  
+
                   <Badge variant="secondary" className="mb-3">
                     {member.role}
                   </Badge>
-                  
-                  <p className="text-sm text-gray-600 mb-4">
+
+                  <p className="text-sm text-muted-foreground mb-4">
                     {member.email}
                   </p>
-                  
+
                   <div className="flex gap-2 w-full">
                     <Button
                       variant="outline"
@@ -449,7 +449,7 @@ export default function AdminMembersPage() {
                       </Avatar>
                       <div>
                         <h3 className="font-semibold">{member.name}</h3>
-                        <p className="text-sm text-gray-500">{member.email}</p>
+                        <p className="text-sm text-muted-foreground">{member.email}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -472,12 +472,12 @@ export default function AdminMembersPage() {
           {/* Pagination Controls */}
           <div className="flex items-center justify-between mt-4">
             <div>
-              <p className="text-sm text-gray-500">Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredMembers.length)} of {filteredMembers.length}</p>
+              <p className="text-sm text-muted-foreground">Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredMembers.length)} of {filteredMembers.length}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="ghost" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>First</Button>
               <Button size="sm" variant="ghost" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</Button>
-              <div className="px-3 py-1 bg-gray-100 rounded-md">Page {currentPage} of {totalPages}</div>
+              <div className="px-3 py-1 bg-muted rounded-md">Page {currentPage} of {totalPages}</div>
               <Button size="sm" variant="ghost" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
               <Button size="sm" variant="ghost" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>Last</Button>
             </div>
@@ -491,7 +491,7 @@ export default function AdminMembersPage() {
           <DialogHeader>
             <DialogTitle>Member Details</DialogTitle>
           </DialogHeader>
-          
+
           {viewingMember && (
             <div className="space-y-6">
               <div className="flex items-center gap-4">
@@ -509,16 +509,16 @@ export default function AdminMembersPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm text-gray-500">Email</Label>
+                  <Label className="text-sm text-muted-foreground">Email</Label>
                   <p className="font-medium">{viewingMember.email}</p>
                 </div>
                 <div>
-                  <Label className="text-sm text-gray-500">Role</Label>
+                  <Label className="text-sm text-muted-foreground">Role</Label>
                   <p className="font-medium">{viewingMember.role}</p>
                 </div>
                 {viewingMember.familyMemberId && (
                   <div>
-                    <Label className="text-sm text-gray-500">Linked Family Member</Label>
+                    <Label className="text-sm text-muted-foreground">Linked Family Member</Label>
                     <p className="font-medium">
                       {familyMembers.find(fm => fm.id === viewingMember.familyMemberId)?.name || viewingMember.familyMemberId}
                     </p>
@@ -558,7 +558,7 @@ export default function AdminMembersPage() {
               {isAddingMember ? 'Add New Member' : 'Edit Member'}
             </DialogTitle>
           </DialogHeader>
-          
+
           {editingMember && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -575,7 +575,7 @@ export default function AdminMembersPage() {
                     <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="email">Email *</Label>
                   <Input
@@ -590,7 +590,7 @@ export default function AdminMembersPage() {
                     <p className="text-sm text-red-500 mt-1">{formErrors.email}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="role">Role *</Label>
                   <Select
@@ -609,7 +609,7 @@ export default function AdminMembersPage() {
                     <p className="text-sm text-red-500 mt-1">{formErrors.role}</p>
                   )}
                 </div>
-                
+
                 {isAddingMember && (
                   <div>
                     <Label htmlFor="password">Password *</Label>
@@ -626,7 +626,7 @@ export default function AdminMembersPage() {
                     )}
                   </div>
                 )}
-                
+
                 <div>
                   <Label htmlFor="familyMemberId">Link to Family Member</Label>
                   <Select
@@ -649,7 +649,7 @@ export default function AdminMembersPage() {
                   </Select>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="profileImage">Profile Image</Label>
                 <ImageUpload
@@ -659,7 +659,7 @@ export default function AdminMembersPage() {
                   className="mt-2"
                 />
               </div>
-              
+
               {!isAddingMember && (
                 <div>
                   <Label htmlFor="password">New Password (leave blank to keep current)</Label>
@@ -672,7 +672,7 @@ export default function AdminMembersPage() {
                   />
                 </div>
               )}
-              
+
               <div className="flex gap-4 justify-end">
                 <Button
                   variant="outline"
@@ -722,14 +722,14 @@ export default function AdminMembersPage() {
         <Card className="text-center py-12">
           <CardContent>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading members...</p>
+            <p className="text-muted-foreground">Loading members...</p>
           </CardContent>
         </Card>
       ) : filteredMembers.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No members found matching your search.</p>
+            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No members found matching your search.</p>
           </CardContent>
         </Card>
       ) : null}
