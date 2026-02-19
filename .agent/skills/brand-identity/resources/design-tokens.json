@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "brand_name": "Gemida Website",
+    "description": "Core design tokens for UI implementation. Values reflect the site CSS variables from globals.css (light/dark-aware)."
+  },
+  "colors": {
+    "primary": {
+      "DEFAULT": "#171717",
+      "hover": "#2b2b2b",
+      "foreground": "#FBFBFB"
+    },
+    "secondary": {
+      "DEFAULT": "#F4F4F5",
+      "foreground": "#171717"
+    },
+    "background": "#FFFFFF",
+    "foreground": "#0A0A0A",
+    "muted": "#F4F4F5",
+    "accent": "#F4F4F5",
+    "destructive": "#EF4444",
+    "success": "#10B981"
+  },
+  "typography": {
+    "font_family_headings": ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+    "font_family_body": ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+    "font_weight_bold": "700",
+    "font_weight_normal": "400"
+  },
+  "ui": {
+    "border_radius_default": "0.5rem",
+    "border_radius_small": "0.25rem",
+    "spacing_base_unit": "4px"
+  },
+  "notes": {
+    "source": "Values derived from app/globals.css where colors are defined as HSL CSS variables. Use HSL vars for precise runtime colors (dark mode aware).",
+    "css_variable_examples": {
+      "--primary": "0 0% 9% (approx #171717)",
+      "--primary-foreground": "0 0% 98% (approx #FBFBFB)",
+      "--background": "0 0% 100% (white)"
+    }
+  }
+}
