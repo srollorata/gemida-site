@@ -139,7 +139,7 @@ export default function AdminFamilyTreePage() {
     // Reset to first page when search term, filtered count, or view mode change
     setCurrentPage(1);
   }, [searchTerm, sortedMembers.length, viewMode]);
-  
+
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(totalPages);
@@ -148,29 +148,29 @@ export default function AdminFamilyTreePage() {
 
   const validateMember = (member: FamilyMember): boolean => {
     const errors: Record<string, string> = {};
-    
+
     if (!member.name || member.name.trim() === '') {
       errors.name = 'Name is required';
     }
-    
+
     if (!member.relationship || member.relationship.trim() === '') {
       errors.relationship = 'Relationship is required';
     }
-    
+
     if (member.birthDate && new Date(member.birthDate) > new Date()) {
       errors.birthDate = 'Birth date cannot be in the future';
     }
-    
+
     if (member.deathDate && member.birthDate) {
       if (new Date(member.deathDate) < new Date(member.birthDate)) {
         errors.deathDate = 'Death date cannot be before birth date';
       }
     }
-    
+
     if (member.spouse && member.spouse === member.id) {
       errors.spouse = 'A member cannot be their own spouse';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -319,12 +319,12 @@ export default function AdminFamilyTreePage() {
 
   const toggleRelationship = (type: 'parents' | 'children', memberId: string) => {
     if (!editingMember) return;
-    
+
     const current = editingMember[type] || [];
     const updated = current.includes(memberId)
       ? current.filter(id => id !== memberId)
       : [...current, memberId];
-    
+
     updateEditingMember(type, updated);
   };
 
@@ -335,8 +335,8 @@ export default function AdminFamilyTreePage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Family Tree</h1>
-        <p className="text-gray-600">Add, edit, and organize all family members in your family tree</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Manage Family Tree</h1>
+        <p className="text-muted-foreground">Add, edit, and organize all family members in your family tree</p>
         <Badge variant="outline" className="mt-2">
           <Shield className="w-3 h-3 mr-1" />
           Admin Access
@@ -349,7 +349,7 @@ export default function AdminFamilyTreePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search family members..."
                   value={searchTerm}
@@ -359,7 +359,7 @@ export default function AdminFamilyTreePage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center bg-gray-100 rounded-md p-1">
+              <div className="flex items-center bg-muted rounded-md p-1">
                 <Button
                   variant={viewMode === 'grid' ? undefined : 'ghost'}
                   size="sm"
@@ -414,28 +414,28 @@ export default function AdminFamilyTreePage() {
                       {member.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  
-                  <h3 className="font-semibold text-lg text-gray-900 mb-1">
+
+                  <h3 className="font-semibold text-lg text-foreground mb-1">
                     {member.name}
                   </h3>
-                  
+
                   <Badge variant="secondary" className="mb-3">
                     {member.relationship}
                   </Badge>
-                  
+
                   {member.isUser && (
                     <Badge variant="outline" className="mb-3 text-emerald-600 border-emerald-600">
                       <Users className="w-3 h-3 mr-1" />
                       Site Member
                     </Badge>
                   )}
-                  
+
                   {member.birthDate && (
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       Born {new Date(member.birthDate).getFullYear()}
                     </p>
                   )}
-                  
+
                   <div className="flex gap-2 w-full">
                     <Button
                       variant="outline"
@@ -485,7 +485,7 @@ export default function AdminFamilyTreePage() {
                       </Avatar>
                       <div>
                         <h3 className="font-semibold">{member.name}</h3>
-                        <p className="text-sm text-gray-500">{member.relationship}{member.birthDate ? ` • ${new Date(member.birthDate).getFullYear()}` : ''}</p>
+                        <p className="text-sm text-muted-foreground">{member.relationship}{member.birthDate ? ` • ${new Date(member.birthDate).getFullYear()}` : ''}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -508,12 +508,12 @@ export default function AdminFamilyTreePage() {
           {/* Pagination Controls */}
           <div className="flex items-center justify-between mt-4">
             <div>
-              <p className="text-sm text-gray-500">Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, sortedMembers.length)} of {sortedMembers.length}</p>
+              <p className="text-sm text-muted-foreground">Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, sortedMembers.length)} of {sortedMembers.length}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="ghost" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>First</Button>
               <Button size="sm" variant="ghost" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</Button>
-              <div className="px-3 py-1 bg-gray-100 rounded-md">Page {currentPage} of {totalPages}</div>
+              <div className="px-3 py-1 bg-muted rounded-md">Page {currentPage} of {totalPages}</div>
               <Button size="sm" variant="ghost" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
               <Button size="sm" variant="ghost" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>Last</Button>
             </div>
@@ -527,7 +527,7 @@ export default function AdminFamilyTreePage() {
           <DialogHeader>
             <DialogTitle>Family Member Details</DialogTitle>
           </DialogHeader>
-          
+
           {viewingMember && (
             <div className="space-y-6">
               <div className="flex items-center gap-4">
@@ -546,25 +546,25 @@ export default function AdminFamilyTreePage() {
               <div className="grid grid-cols-2 gap-4">
                 {viewingMember.birthDate && (
                   <div>
-                    <Label className="text-sm text-gray-500">Birth Date</Label>
+                    <Label className="text-sm text-muted-foreground">Birth Date</Label>
                     <p className="font-medium">{new Date(viewingMember.birthDate).toLocaleDateString()}</p>
                   </div>
                 )}
                 {viewingMember.deathDate && (
                   <div>
-                    <Label className="text-sm text-gray-500">Death Date</Label>
+                    <Label className="text-sm text-muted-foreground">Death Date</Label>
                     <p className="font-medium">{new Date(viewingMember.deathDate).toLocaleDateString()}</p>
                   </div>
                 )}
                 {viewingMember.occupation && (
                   <div>
-                    <Label className="text-sm text-gray-500">Occupation</Label>
+                    <Label className="text-sm text-muted-foreground">Occupation</Label>
                     <p className="font-medium">{viewingMember.occupation}</p>
                   </div>
                 )}
                 {viewingMember.location && (
                   <div>
-                    <Label className="text-sm text-gray-500">Location</Label>
+                    <Label className="text-sm text-muted-foreground">Location</Label>
                     <p className="font-medium">{viewingMember.location}</p>
                   </div>
                 )}
@@ -572,21 +572,21 @@ export default function AdminFamilyTreePage() {
 
               {viewingMember.biography && (
                 <div>
-                  <Label className="text-sm text-gray-500">Biography</Label>
+                  <Label className="text-sm text-muted-foreground">Biography</Label>
                   <p className="mt-1">{viewingMember.biography}</p>
                 </div>
               )}
 
               {viewingMember.spouse && (
                 <div>
-                  <Label className="text-sm text-gray-500">Spouse</Label>
+                  <Label className="text-sm text-muted-foreground">Spouse</Label>
                   <p className="font-medium">{getMemberName(viewingMember.spouse)}</p>
                 </div>
               )}
 
               {viewingMember.parents && viewingMember.parents.length > 0 && (
                 <div>
-                  <Label className="text-sm text-gray-500">Parents</Label>
+                  <Label className="text-sm text-muted-foreground">Parents</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {viewingMember.parents.map(parentId => (
                       <Badge key={parentId} variant="outline">{getMemberName(parentId)}</Badge>
@@ -597,7 +597,7 @@ export default function AdminFamilyTreePage() {
 
               {viewingMember.children && viewingMember.children.length > 0 && (
                 <div>
-                  <Label className="text-sm text-gray-500">Children</Label>
+                  <Label className="text-sm text-muted-foreground">Children</Label>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {viewingMember.children.map(childId => (
                       <Badge key={childId} variant="outline">{getMemberName(childId)}</Badge>
@@ -638,7 +638,7 @@ export default function AdminFamilyTreePage() {
               {isAddingMember ? 'Add New Family Member' : 'Edit Family Member'}
             </DialogTitle>
           </DialogHeader>
-          
+
           {editingMember && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -655,7 +655,7 @@ export default function AdminFamilyTreePage() {
                     <p className="text-sm text-red-500 mt-1">{formErrors.name}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="relationship">Relationship *</Label>
                   <Input
@@ -669,7 +669,7 @@ export default function AdminFamilyTreePage() {
                     <p className="text-sm text-red-500 mt-1">{formErrors.relationship}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="birthDate">Birth Date</Label>
                   <Input
@@ -683,7 +683,7 @@ export default function AdminFamilyTreePage() {
                     <p className="text-sm text-red-500 mt-1">{formErrors.birthDate}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="deathDate">Death Date (if applicable)</Label>
                   <Input
@@ -697,7 +697,7 @@ export default function AdminFamilyTreePage() {
                     <p className="text-sm text-red-500 mt-1">{formErrors.deathDate}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="occupation">Occupation</Label>
                   <Input
@@ -707,7 +707,7 @@ export default function AdminFamilyTreePage() {
                     placeholder="Enter occupation"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="location">Location</Label>
                   <Input
@@ -718,7 +718,7 @@ export default function AdminFamilyTreePage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="profileImage">Profile Image</Label>
                 <ImageUpload
@@ -728,7 +728,7 @@ export default function AdminFamilyTreePage() {
                   className="mt-2"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="biography">Biography</Label>
                 <Textarea
@@ -743,7 +743,7 @@ export default function AdminFamilyTreePage() {
               {/* Relationship Management */}
               <div className="space-y-4 border-t pt-4">
                 <h3 className="font-semibold">Family Relationships</h3>
-                
+
                 <div>
                   <Label htmlFor="spouse">Spouse</Label>
                   <Select
@@ -790,7 +790,7 @@ export default function AdminFamilyTreePage() {
                         </div>
                       ))}
                     {familyMembers.filter(m => m.id !== editingMember.id).length === 0 && (
-                      <p className="text-sm text-gray-500">No other members available</p>
+                      <p className="text-sm text-muted-foreground">No other members available</p>
                     )}
                   </div>
                 </div>
@@ -816,12 +816,12 @@ export default function AdminFamilyTreePage() {
                         </div>
                       ))}
                     {familyMembers.filter(m => m.id !== editingMember.id).length === 0 && (
-                      <p className="text-sm text-gray-500">No other members available</p>
+                      <p className="text-sm text-muted-foreground">No other members available</p>
                     )}
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-4 justify-end">
                 <Button
                   variant="outline"
@@ -871,14 +871,14 @@ export default function AdminFamilyTreePage() {
         <Card className="text-center py-12">
           <CardContent>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading family members...</p>
+            <p className="text-muted-foreground">Loading family members...</p>
           </CardContent>
         </Card>
       ) : filteredMembers.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
-            <Network className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No family members found matching your search.</p>
+            <Network className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No family members found matching your search.</p>
           </CardContent>
         </Card>
       ) : null}

@@ -43,7 +43,15 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+
+    /* Animation tokens */
+    --gradient-a: 152 60% 92%;
+    --gradient-b: 43 70% 92%;
+    --particle-color: 152 40% 70%;
+    --grid-color: 0 0% 80%;
+    --glow-color: 152 60% 40%;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -69,6 +77,13 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    /* Animation tokens — dark */
+    --gradient-a: 152 40% 12%;
+    --gradient-b: 220 30% 10%;
+    --particle-color: 152 30% 30%;
+    --grid-color: 0 0% 20%;
+    --glow-color: 152 50% 45%;
   }
 }
 
@@ -76,7 +91,26 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Animated background gradient */
+.bg-animated-gradient {
+  background: linear-gradient(135deg,
+      hsl(var(--gradient-a)) 0%,
+      hsl(var(--background)) 40%,
+      hsl(var(--background)) 60%,
+      hsl(var(--gradient-b)) 100%);
+  background-size: 200% 200%;
+}
+
+/* Grid pattern background */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(hsl(var(--grid-color) / 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--grid-color) / 0.15) 1px, transparent 1px);
+  background-size: 60px 60px;
 }

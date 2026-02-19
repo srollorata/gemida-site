@@ -18,7 +18,7 @@ export default function FamilyTreePage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      
+
       try {
         setIsLoading(true);
         const familyRes = await apiRequest('/api/family-members');
@@ -51,12 +51,12 @@ export default function FamilyTreePage() {
     <div className="max-w-5xl mx-auto p-6">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-emerald-100 rounded-full">
+          <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
             <TreePine className="w-8 h-8 text-emerald-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Family Tree</h1>
-            <p className="text-gray-600">Explore your family connections and heritage</p>
+            <h1 className="text-3xl font-bold text-foreground">Family Tree</h1>
+            <p className="text-muted-foreground">Explore your family connections and heritage</p>
           </div>
         </div>
       </div>
@@ -80,26 +80,26 @@ export default function FamilyTreePage() {
         <Card>
           <CardContent className="p-6 text-center">
             <Users className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900">{familyMembers.length}</p>
-            <p className="text-sm text-gray-600">Total Members</p>
+            <p className="text-2xl font-bold text-foreground">{familyMembers.length}</p>
+            <p className="text-sm text-muted-foreground">Total Members</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
             <UserCheck className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-foreground">
               {familyMembers.filter(m => m.isUser).length}
             </p>
-            <p className="text-sm text-gray-600">Site Members</p>
+            <p className="text-sm text-muted-foreground">Site Members</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6 text-center">
             <Crown className="w-8 h-8 text-amber-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-foreground">
               {familyMembers.filter(m => !m.parents || m.parents.length === 0).length}
             </p>
-            <p className="text-sm text-gray-600">Family Branches</p>
+            <p className="text-sm text-muted-foreground">Family Branches</p>
           </CardContent>
         </Card>
       </div>

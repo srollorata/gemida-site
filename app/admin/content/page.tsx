@@ -48,10 +48,10 @@ export default function AdminContentPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      
+
       try {
         setIsLoading(true);
-        
+
         const [eventsRes, timelineRes, familyRes] = await Promise.all([
           apiRequest('/api/events'),
           apiRequest('/api/timeline-events'),
@@ -307,8 +307,8 @@ export default function AdminContentPage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Content</h1>
-        <p className="text-gray-600">Create and manage family events and timeline entries</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Manage Content</h1>
+        <p className="text-muted-foreground">Create and manage family events and timeline entries</p>
         <Badge variant="outline" className="mt-2">
           <Shield className="w-3 h-3 mr-1" />
           Admin Access
@@ -328,7 +328,7 @@ export default function AdminContentPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-between">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Search events..."
                       value={searchTerm}
@@ -352,13 +352,13 @@ export default function AdminContentPage() {
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                      <h3 className="font-semibold text-lg text-foreground mb-1">
                         {event.title}
                       </h3>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                         {event.description}
                       </p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
                           {new Date(event.date).toLocaleDateString()}
@@ -367,7 +367,7 @@ export default function AdminContentPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -403,7 +403,7 @@ export default function AdminContentPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-between">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Search timeline events..."
                       value={searchTerm}
@@ -427,13 +427,13 @@ export default function AdminContentPage() {
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                      <h3 className="font-semibold text-lg text-foreground mb-1">
                         {event.title}
                       </h3>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                         {event.description}
                       </p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           {new Date(event.date).toLocaleDateString()}
@@ -442,7 +442,7 @@ export default function AdminContentPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -483,7 +483,7 @@ export default function AdminContentPage() {
               {isAddingEvent ? 'Add New Event' : 'Edit Event'}
             </DialogTitle>
           </DialogHeader>
-          
+
           {editingEvent && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -492,24 +492,24 @@ export default function AdminContentPage() {
                   <Input
                     id="eventTitle"
                     value={editingEvent.title}
-                    onChange={(e) => setEditingEvent({...editingEvent, title: e.target.value})}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
                     placeholder="Enter event title"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="eventDate">Date</Label>
                   <Input
                     id="eventDate"
                     type="date"
                     value={editingEvent.date}
-                    onChange={(e) => setEditingEvent({...editingEvent, date: e.target.value})}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, date: e.target.value })}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="eventType">Type</Label>
-                  <Select value={editingEvent.type} onValueChange={(value) => setEditingEvent({...editingEvent, type: value as any})}>
+                  <Select value={editingEvent.type} onValueChange={(value) => setEditingEvent({ ...editingEvent, type: value as any })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -524,40 +524,40 @@ export default function AdminContentPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <Label htmlFor="eventLocation">Location</Label>
                   <Input
                     id="eventLocation"
                     value={editingEvent.location || ''}
-                    onChange={(e) => setEditingEvent({...editingEvent, location: e.target.value})}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
                     placeholder="Enter location"
                   />
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="eventDescription">Description</Label>
                 <Textarea
                   id="eventDescription"
                   value={editingEvent.description}
-                  onChange={(e) => setEditingEvent({...editingEvent, description: e.target.value})}
+                  onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
                   placeholder="Enter event description..."
                   rows={4}
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="eventPhotos">Event Photos</Label>
                 <ImageUpload
                   value={editingEvent.photos || []}
-                  onChange={(urls) => setEditingEvent({...editingEvent, photos: Array.isArray(urls) ? urls : [urls]})}
+                  onChange={(urls) => setEditingEvent({ ...editingEvent, photos: Array.isArray(urls) ? urls : [urls] })}
                   multiple={true}
                   maxFiles={10}
                   className="mt-2"
                 />
               </div>
-              
+
               <div className="flex gap-4 justify-end">
                 <Button
                   variant="outline"
@@ -590,7 +590,7 @@ export default function AdminContentPage() {
               {isAddingTimelineEvent ? 'Add New Timeline Event' : 'Edit Timeline Event'}
             </DialogTitle>
           </DialogHeader>
-          
+
           {editingTimelineEvent && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -599,24 +599,24 @@ export default function AdminContentPage() {
                   <Input
                     id="timelineTitle"
                     value={editingTimelineEvent.title}
-                    onChange={(e) => setEditingTimelineEvent({...editingTimelineEvent, title: e.target.value})}
+                    onChange={(e) => setEditingTimelineEvent({ ...editingTimelineEvent, title: e.target.value })}
                     placeholder="Enter event title"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="timelineDate">Date</Label>
                   <Input
                     id="timelineDate"
                     type="date"
                     value={editingTimelineEvent.date}
-                    onChange={(e) => setEditingTimelineEvent({...editingTimelineEvent, date: e.target.value})}
+                    onChange={(e) => setEditingTimelineEvent({ ...editingTimelineEvent, date: e.target.value })}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="timelineType">Type</Label>
-                  <Select value={editingTimelineEvent.type} onValueChange={(value) => setEditingTimelineEvent({...editingTimelineEvent, type: value as any})}>
+                  <Select value={editingTimelineEvent.type} onValueChange={(value) => setEditingTimelineEvent({ ...editingTimelineEvent, type: value as any })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -632,18 +632,18 @@ export default function AdminContentPage() {
                   </Select>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="timelineDescription">Description</Label>
                 <Textarea
                   id="timelineDescription"
                   value={editingTimelineEvent.description}
-                  onChange={(e) => setEditingTimelineEvent({...editingTimelineEvent, description: e.target.value})}
+                  onChange={(e) => setEditingTimelineEvent({ ...editingTimelineEvent, description: e.target.value })}
                   placeholder="Enter event description..."
                   rows={4}
                 />
               </div>
-              
+
               <div className="flex gap-4 justify-end">
                 <Button
                   variant="outline"

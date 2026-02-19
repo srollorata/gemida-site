@@ -47,7 +47,7 @@ export default function ProfilePage() {
       try {
         setIsLoading(true);
         const response = await apiRequest(`/api/users/${user.id}`);
-        
+
         if (response.ok) {
           const data = await response.json();
           setFormData({
@@ -180,8 +180,8 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
-        <p className="text-gray-600">Manage your account settings and preferences</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">My Profile</h1>
+        <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
       {error && (
@@ -192,9 +192,9 @@ export default function ProfilePage() {
       )}
 
       {success && (
-        <Alert className="mb-6 border-green-500 bg-green-50">
+        <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">{success}</AlertDescription>
+          <AlertDescription className="text-green-800 dark:text-green-300">{success}</AlertDescription>
         </Alert>
       )}
 
@@ -224,7 +224,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="name"
                     type="text"
@@ -239,7 +239,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
@@ -268,8 +268,8 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700"
                 disabled={isSaving}
               >
@@ -305,7 +305,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="newPassword"
                     type="password"
@@ -321,7 +321,7 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -334,8 +334,8 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700"
                 disabled={isChangingPassword}
               >
