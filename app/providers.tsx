@@ -36,7 +36,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative z-10">
       {user && !isLoginPage && <Navigation />}
       <main className={user && !isLoginPage ? 'pt-0' : ''}>
         {children}
