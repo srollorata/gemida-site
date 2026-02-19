@@ -17,7 +17,7 @@ export function AnimatedBackground() {
     return (
         <div
             aria-hidden="true"
-            className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+            className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
         >
             {/* Layer 1: Animated gradient */}
             <div className="absolute inset-0 bg-animated-gradient animate-gradient-shift" />
