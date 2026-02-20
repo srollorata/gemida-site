@@ -66,12 +66,14 @@ export function ImageUpload({
                 <img
                   src={url}
                   alt={`Upload ${index + 1}`}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => removeImage(index)}
-                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-red-400"
+                  aria-label="Remove image"
                 >
                   <X className="w-4 h-4" />
                 </button>

@@ -114,6 +114,31 @@ JWT_SECRET="a_long_random_secret"
 
 ---
 
+## 🎨 Design & Brand Guidelines
+
+This project aims to follow the **brand identity anti-patterns** defined in `.agent/skills/brand-identity/resources/anti-patterns.md`. In short, avoid:
+
+- flashy animations that block interaction or last more than 300ms for user-driven transitions
+- low‑contrast text combinations and more than three primary colors per view
+- cluttered layouts, mystery‑meat navigation, or mobile‑hostile designs
+- unoptimized images (use WebP, add `loading="lazy"`, etc.)
+- form frustrations like placeholder‑only labels or validation only on submit
+- auto‑playing content, `click here` links, or Lorem Ipsum in production
+
+Review the `anti-patterns.md` file for the full checklist and try to apply the principles during development.
+
+### 🧪 Color Contrast Audit
+
+A helper script (`scripts/contrast-audit.js`) reads the CSS variables in `app/globals.css` and reports WCAG contrast ratios for the light and dark themes. Run it using:
+
+```bash
+node scripts/contrast-audit.js
+```
+
+The output highlights any pairs falling below AA thresholds (4.5:1 for normal text). Use the results to adjust your token palette and avoid harsh or fatigued colors.
+
+We recommend running the audit whenever you tweak the theme or add new semantic colors.
+
 ## ✅ Development notes & troubleshooting
 
 - If Prisma client is outdated: `npx prisma generate`

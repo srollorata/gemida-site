@@ -24,3 +24,7 @@ If you are generating code, choosing libraries, or structuring UI components, re
 ### For Copywriting & Content Generation
 If you are writing marketing copy, error messages, documentation, or user-facing text, read the persona guidelines here:
 👉 **[`resources/voice-tone.md`](resources/voice-tone.md)**
+
+### For Design and UX Anti-patterns
+To ensure we avoid common design and UX pitfalls, consult the anti-patterns guide here:
+👉 **[`resources/anti-patterns.md`](resources/anti-patterns.md)**
