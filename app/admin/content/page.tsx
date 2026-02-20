@@ -514,13 +514,14 @@ export default function AdminContentPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="birthday">Birthday</SelectItem>
-                      <SelectItem value="wedding">Wedding</SelectItem>
-                      <SelectItem value="graduation">Graduation</SelectItem>
-                      <SelectItem value="reunion">Reunion</SelectItem>
-                      <SelectItem value="achievement">Achievement</SelectItem>
-                      <SelectItem value="memorial">Memorial</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="PLAN">Plan</SelectItem>
+                      <SelectItem value="WEDDING">Wedding</SelectItem>
+                      <SelectItem value="GRADUATION">Graduation</SelectItem>
+                      <SelectItem value="REUNION">Reunion</SelectItem>
+                      <SelectItem value="ACHIEVEMENT">Achievement</SelectItem>
+                      <SelectItem value="MEMORIAL">Memorial</SelectItem>
+                      <SelectItem value="MILESTONE">Milestone</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

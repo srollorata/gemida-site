@@ -90,7 +90,9 @@ export default function TimelinePage() {
   };
 
   const filteredEvents = timelineEvents.filter(event => {
-    const matchesType = selectedType === 'all' || event.type === selectedType;
+    const eventTypeKey = (event.type || '').toString().toLowerCase();
+    const selectedTypeKey = (selectedType || '').toString().toLowerCase();
+    const matchesType = selectedType === 'all' || eventTypeKey === selectedTypeKey;
     const decade = getDecade(event.date);
     const matchesDecade = selectedDecade === 'all' || decade.toString() === selectedDecade;
     return matchesType && matchesDecade;

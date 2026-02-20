@@ -3,9 +3,9 @@ import { mapToEventType } from '@/lib/utils';
 
 describe('mapToEventType', () => {
   it('maps known types correctly', () => {
-    expect(mapToEventType('birthday')).toBe('MILESTONE');
-    expect(mapToEventType('wedding')).toBe('MILESTONE');
-    expect(mapToEventType('reunion')).toBe('MILESTONE');
+    expect(mapToEventType('birthday')).toBe('BIRTHDAY');
+    expect(mapToEventType('wedding')).toBe('WEDDING');
+    expect(mapToEventType('reunion')).toBe('REUNION');
     expect(mapToEventType('plan')).toBe('PLAN');
     expect(mapToEventType('timeline')).toBe('TIMELINE');
   });

@@ -14,7 +14,7 @@ export interface FamilyMember {
   weddingDate?: string;
   deathDate?: string;
   profileImage?: string;
-  relationship: string;
+  gender?: string;
   parents?: string[];
   spouse?: string;
   children?: string[];

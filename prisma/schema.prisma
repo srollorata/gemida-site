@@ -24,6 +24,12 @@ enum EventStatus {
 enum EventType {
   PLAN
   TIMELINE
+  MEMORIAL
+  REUNION
+  BIRTHDAY
+  WEDDING
+  GRADUATION
+  ACHIEVEMENT
   MILESTONE
   OTHER
 }
@@ -35,7 +41,7 @@ model FamilyMember {
   weddingDate  DateTime?     // optional
   deathDate    DateTime?     // optional
   profileImage String?
-  relationship String?
+  gender       String?         //
   spouseId     String?       // references another FamilyMember
   spouse       FamilyMember? @relation("SpouseRelation", fields: [spouseId], references: [id], map: "FamilyMember_spouse_fkey")
   spouses      FamilyMember[] @relation("SpouseRelation")

@@ -8,7 +8,7 @@ function getGoJSData(members: FamilyMember[]) {
   const nodes = members.map(member => ({
     key: member.id,
     name: member.name,
-    relationship: member.relationship,
+    gender: (member as any).gender,
     birthDate: member.birthDate,
     deathDate: member.deathDate,
     profileImage: member.profileImage,
@@ -158,7 +158,7 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
         'Auto',
         { alignment: go.Spot.TopRight, alignmentFocus: go.Spot.TopRight, margin: new go.Margin(6,6,0,0) },
         $(go.Shape, { figure: 'RoundedRectangle', parameter1: 12 , parameter2: 4 | 8, fill: badgeBg, stroke: null }),
-        $(go.TextBlock, { margin: 6, font: 'bold 11px sans-serif', stroke: badgeTextColor }, new go.Binding('text', 'relationship'))
+        $(go.TextBlock, { margin: 6, font: 'bold 11px sans-serif', stroke: badgeTextColor }, new go.Binding('text', 'gender'))
       ),
 
       // Child counter - visible only when there are children (bindObject to access node)
@@ -322,7 +322,7 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
             />
             <div>
               <h2 id={`details-heading-${selectedMember.id}`} className="text-lg font-bold text-green-900 dark:text-green-300">{selectedMember.name}</h2>
-              <p className="text-green-700 dark:text-green-200">{selectedMember.relationship}</p>
+              <p className="text-green-700 dark:text-green-200">{(selectedMember as any).gender}</p>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
                 { (selectedMember.birthDate || selectedMember.deathDate) && `${formatDate(selectedMember.birthDate)}${selectedMember.birthDate && selectedMember.deathDate ? ' - ' : ''}${formatDate(selectedMember.deathDate)}` }
               </p>
