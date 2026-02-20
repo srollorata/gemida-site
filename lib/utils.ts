@@ -7,10 +7,44 @@ export function cn(...inputs: ClassValue[]) {
 
 export function mapToEventType(input?: string) {
   if (!input) return 'OTHER';
-  const key = input.toString().toLowerCase();
-  const milestoneTypes = new Set(['birthday', 'wedding', 'graduation', 'reunion', 'memorial', 'achievement', 'milestone']);
-  if (key === 'plan' || key === 'plan') return 'PLAN';
-  if (key === 'timeline') return 'TIMELINE';
-  if (milestoneTypes.has(key)) return 'MILESTONE';
+  const key = input.toString();
+
+  // Normalize common broad types
+  if (key.toLowerCase() === 'plan') return 'PLAN';
+  if (key.toLowerCase() === 'timeline') return 'TIMELINE';
+
+  // Known event subtypes that we want to preserve exactly (match case-insensitively)
+  const known = new Set([
+    'PLAN',
+    'TIMELINE',
+    'MEMORIAL',
+    'WEDDING',
+    'GRADUATION',
+    'ACHIEVEMENT',
+    'MILESTONE',
+    'OTHER',
+    'REUNION',
+    'BIRTHDAY',
+  ]);
+
+  const upper = key.toUpperCase();
+  if (known.has(upper)) return upper;
+
+  // Map some common lowercase labels (e.g. 'birthday') to their enum form
+  const mapping: Record<string, string> = {
+    birthday: 'BIRTHDAY',
+    wedding: 'WEDDING',
+    graduation: 'GRADUATION',
+    reunion: 'REUNION',
+    memorial: 'MEMORIAL',
+    achievement: 'ACHIEVEMENT',
+    milestone: 'MILESTONE',
+    other: 'OTHER',
+  };
+
+  const lowered = key.toLowerCase();
+  if (mapping[lowered]) return mapping[lowered];
+
+  // Fallback to OTHER for unknown values
   return 'OTHER';
 }

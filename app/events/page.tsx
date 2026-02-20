@@ -18,11 +18,11 @@ import {
   Trophy,
   Star,
   Gift,
-  Search,
   Filter
 } from 'lucide-react';
 import { Event } from '@/types';
 import { apiRequest } from '@/lib/api-client';
+import { mapToEventType } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import EventForm from '@/components/EventForm';
@@ -49,16 +49,16 @@ const eventTypeColors: Record<string, string> = {
 
 export default function EventsPage() {
   const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedMemberId, setSelectedMemberId] = useState<string>('all');
-  const [fromDate, setFromDate] = useState<string | null>(null);
-  const [toDate, setToDate] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fromDate, setFromDate] = useState<string | null>(null);
+  const [toDate, setToDate] = useState<string | null>(null);
 
   // Pull fetch into outer scope so it can be reused after creating an event
   const fetchData = async () => {
@@ -69,10 +69,8 @@ export default function EventsPage() {
 
       // Build query parameters based on active filters
       const params = new URLSearchParams();
-      if (selectedStatus && selectedStatus !== 'all') params.set('status', selectedStatus);
+      // We only send type and familyMemberId to the API; year filtering is done client-side
       if (selectedType && selectedType !== 'all') params.set('type', selectedType);
-      if (fromDate) params.set('from', new Date(fromDate).toISOString());
-      if (toDate) params.set('to', new Date(toDate).toISOString());
       if (selectedMemberId && selectedMemberId !== 'all') params.set('familyMemberId', selectedMemberId);
 
       const eventsPath = `/api/events${params.toString() ? `?${params.toString()}` : ''}`;
@@ -106,11 +104,13 @@ export default function EventsPage() {
     return familyMembers.find(member => member.id === id);
   };
 
+  const years = Array.from(new Set(events.map(e => new Date(e.date).getFullYear()))).sort((a, b) => b - a);
+
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === 'all' || event.type === selectedType;
-    return matchesSearch && matchesType;
+    // allow backend enum values (e.g. MILESTONE) and granular subtype strings by mapping
+    const eventTypeMatches = selectedType === 'all' || event.type === selectedType || mapToEventType((event.type as any) || '').toString() === selectedType;
+    const matchesYear = selectedYear === 'all' || new Date(event.date).getFullYear().toString() === selectedYear;
+    return eventTypeMatches && matchesYear;
   });
 
   const sortedEvents = filteredEvents.sort((a, b) =>
@@ -126,33 +126,11 @@ export default function EventsPage() {
 
       {/* Filters */}
       <Card className="mb-8">
-        <CardContent className="p-6">
+          <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search events..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+            <div className="flex-1" />
 
             <div className="flex gap-2 items-center">
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-
               <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger className="w-44">
                   <Filter className="w-4 h-4 mr-2" />
@@ -160,13 +138,21 @@ export default function EventsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="birthday">Birthdays</SelectItem>
-                  <SelectItem value="wedding">Weddings</SelectItem>
-                  <SelectItem value="graduation">Graduations</SelectItem>
-                  <SelectItem value="reunion">Reunions</SelectItem>
-                  <SelectItem value="achievement">Achievements</SelectItem>
-                  <SelectItem value="memorial">Memorials</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="PLAN">Plan</SelectItem>
+                  <SelectItem value="MILESTONE">Milestone</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {years.map(y => (
+                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 

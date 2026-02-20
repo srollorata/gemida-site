@@ -97,6 +97,11 @@ export default function EventForm({ onCreated }: { onCreated?: () => void }) {
               <label className="block text-sm font-medium">Type</label>
               <select value={type} onChange={e => setType(e.target.value)} className="mt-1 block w-full rounded-md border px-3 py-2">
                 <option value="PLAN">Plan</option>
+                <option value="REUNION">Reunion</option>
+                <option value="MEMORIAL">Memorial</option>
+                <option value="WEDDING">Wedding</option>
+                <option value="GRADUATION">Graduation</option>
+                <option value="ACHIEVEMENT">Achievement</option>
                 <option value="MILESTONE">Milestone</option>
                 <option value="OTHER">Other</option>
               </select>
