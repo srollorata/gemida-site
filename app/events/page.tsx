@@ -235,6 +235,7 @@ export default function EventsPage() {
                         <img
                           src={event.photos[0]}
                           alt={event.title}
+                          loading="lazy"
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                         {event.photos.length > 1 && (
@@ -324,6 +325,7 @@ export default function EventsPage() {
                                         key={index}
                                         src={photo}
                                         alt={`${event.title} photo ${index + 1}`}
+                                        loading="lazy"
                                         className="w-full h-32 object-cover rounded-lg hover:scale-105 transition-transform cursor-pointer"
                                       />
                                     ))}

@@ -263,6 +263,7 @@ export default function DashboardPage() {
                   <img
                     src={member.profileImage}
                     alt={member.name}
+                    loading="lazy"
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <div className="flex-1">

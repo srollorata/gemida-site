@@ -17,7 +17,7 @@
     "foreground": "#0A0A0A",
     "muted": "#F4F4F5",
     "accent": "#F4F4F5",
-    "destructive": "#EF4444",
+    "destructive": "#E61414",
     "success": "#10B981"
   },
   "typography": {
@@ -36,6 +36,7 @@
     "css_variable_examples": {
       "--primary": "0 0% 9% (approx #171717)",
       "--primary-foreground": "0 0% 98% (approx #FBFBFB)",
+      "--destructive": "0 84.2% 49% (light) / 0 62.8% 45% (dark)",
       "--background": "0 0% 100% (white)"
     }
   }

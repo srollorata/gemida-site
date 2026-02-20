@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as go from 'gojs';
+import { useTheme } from 'next-themes';
 import { FamilyMember } from '@/types';
 
 // Transform FamilyMember[] to GoJS node/link data
@@ -34,6 +35,7 @@ interface FamilyTreeGoJSProps {
 }
 
 const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
+  const { resolvedTheme } = useTheme();
   const diagramRef = useRef<HTMLDivElement>(null);
   const diagramInstanceRef = useRef<go.Diagram | null>(null);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
@@ -69,8 +71,22 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
     const $ = go.GraphObject.make;
     const { nodes, links } = getGoJSData(familyMembers);
 
+    // theme-aware colors
+    const isDark = resolvedTheme === 'dark';
+    const nodeBackground = isDark ? '#1f2937' : '#ffffff';
+    const nodeStrokeColor = isDark ? '#374151' : '#10b981';
+    const pictureBg = isDark ? '#1f2937' : '#ffffff';
+    const textPrimary = isDark ? '#f9fafb' : '#064e3b';
+    const textSecondary = isDark ? '#9ca3af' : '#6b7280';
+    const badgeBg = isDark ? '#374151' : '#10b981';
+    const badgeTextColor = isDark ? '#f87171' : '#7a1728';
+    const childCircleFill = '#10b981';
+    const linkStroke = isDark ? '#6b7280' : '#10b981';
+    const linkHighlight = isDark ? '#f9fafb' : '#485670';
+
     const diagram = $(go.Diagram, diagramRef.current, {
       initialContentAlignment: go.Spot.Center,
+      // background handled by surrounding div's Tailwind classes
       layout: $(go.TreeLayout, {
         angle: 90,
         nodeSpacing: 20,
@@ -110,14 +126,14 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
       $(
         go.Panel,
         'Auto',
-        $(go.Shape, 'RoundedRectangle', { name: 'mainShape', fill: '#ffffff', stroke: '#e6fef1', strokeWidth: 2, parameter1: 12, desiredSize: new go.Size(220, 110) }),
+        $(go.Shape, 'RoundedRectangle', { name: 'mainShape', fill: nodeBackground, stroke: nodeStrokeColor, strokeWidth: 2, parameter1: 12, desiredSize: new go.Size(220, 110) }),
         $(
           go.Panel,
           'Table',
           // increase left margin to make space for avatar pop-out
           { margin: new go.Margin(8, 44, 8, 76) },
-          $(go.TextBlock, { row: 0, font: 'bold 14px Poppins, sans-serif', stroke: '#064e3b', wrap: go.TextBlock.WrapFit, textAlign: 'center' }, new go.Binding('text', 'name')),
-          $(go.TextBlock, { row: 2, font: '11px sans-serif', stroke: '#6b7280', textAlign: 'center' }, new go.Binding('text', '', (data: any) => {
+          $(go.TextBlock, { row: 0, font: 'bold 14px Poppins, sans-serif', stroke: textPrimary, wrap: go.TextBlock.WrapFit, textAlign: 'center' }, new go.Binding('text', 'name')),
+          $(go.TextBlock, { row: 2, font: '11px sans-serif', stroke: textSecondary, textAlign: 'center' }, new go.Binding('text', '', (data: any) => {
             const b = data?.birthDate ? new Date(data.birthDate).toISOString().slice(0,10) : '';
             const d = data?.deathDate ? new Date(data.deathDate).toISOString().slice(0,10) : '';
             if (!b && !d) return '';
@@ -131,9 +147,9 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
       $(
         go.Panel,
         'Spot',
-        { alignment: go.Spot.MiddleLeft, alignmentFocus: go.Spot.MiddleLeft, margin: new go.Margin(0,0,0, -26) },
-        $(go.Shape, 'Circle', { desiredSize: new go.Size(52,52), fill: '#ffffff', stroke: '#e6fef1', strokeWidth: 2 }),
-        $(go.Picture, { desiredSize: new go.Size(48,48), margin: 2, background: '#fff', imageStretch: go.GraphObject.UniformToFill, alignment: go.Spot.Center }, new go.Binding('source', 'profileImage'))
+        { alignment: go.Spot.MiddleLeft, alignmentFocus: go.Spot.MiddleLeft, margin: new go.Margin(0,0,0, -26), isClipping: true },
+        $(go.Shape, 'Circle', { desiredSize: new go.Size(52,52), fill: pictureBg, stroke: nodeStrokeColor, strokeWidth: 2 }),
+        $(go.Picture, { desiredSize: new go.Size(52,52), margin: 2, background: pictureBg, imageStretch: go.ImageStretch.Fill, alignment: go.Spot.Center }, new go.Binding('source', 'profileImage'))
       ),
 
       // Badge (relationship/status)
@@ -141,8 +157,8 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
         go.Panel,
         'Auto',
         { alignment: go.Spot.TopRight, alignmentFocus: go.Spot.TopRight, margin: new go.Margin(6,6,0,0) },
-        $(go.Shape, { figure: 'RoundedRectangle', parameter1: 4, fill: '#fff3f0', stroke: null }),
-        $(go.TextBlock, { margin: 6, font: 'bold 11px sans-serif', stroke: '#7a1728' }, new go.Binding('text', 'relationship'))
+        $(go.Shape, { figure: 'RoundedRectangle', parameter1: 12 , parameter2: 4 | 8, fill: badgeBg, stroke: null }),
+        $(go.TextBlock, { margin: 6, font: 'bold 11px sans-serif', stroke: badgeTextColor }, new go.Binding('text', 'relationship'))
       ),
 
       // Child counter - visible only when there are children (bindObject to access node)
@@ -162,8 +178,8 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
     diagram.linkTemplate = $(
       go.Link,
       { selectionAdorned: false, routing: go.Link.Orthogonal, corner: 6, layerName: 'Background' },
-      $(go.Shape, { strokeWidth: 1, stroke: '#94d3b5' })
-        .bindObject('stroke', 'isHighlighted', (h: boolean) => h ? '#485670' : '#94d3b5')
+      $(go.Shape, { strokeWidth: 1, stroke: linkStroke })
+        .bindObject('stroke', 'isHighlighted', (h: boolean) => h ? linkHighlight : linkStroke)
         .bindObject('strokeWidth', 'isSelected', (s: boolean) => s ? 2 : 1)
     );
 
@@ -207,7 +223,7 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
     };
 
 
-  }, [familyMembers]);
+  }, [familyMembers, resolvedTheme]);
 
   // Zoom control functions
   const zoomIn = () => {
@@ -257,76 +273,10 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
   };
 
   return (
-    <div className="relative w-full h-[600px] border rounded-lg shadow bg-white">
+    <div className="relative w-full h-[600px] border rounded-lg shadow bg-white dark:bg-[#0a0a0a] dark:border-gray-700">
       <div className="w-full h-full" ref={diagramRef} tabIndex={0} onKeyDown={handleKeyDown} role="application" aria-label="Family tree diagram. Focus and use + to zoom in, - to zoom out, f to fit, p to toggle panning, Escape to close details." />
       <div aria-live="polite" className="sr-only">{selectedMember ? `Selected ${selectedMember.name}` : 'No member selected'}</div>
       
-      {/* Zoom and Pan Controls */}
-      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-        {/* Zoom Controls */}
-        <div className="flex flex-col bg-white rounded-lg shadow border">
-          <button
-            className="px-3 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors rounded-t-lg focus:ring-2 focus:ring-offset-1 focus:ring-green-500"
-            onClick={zoomIn}
-            title="Zoom In"
-            aria-label="Zoom in"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </button>
-          
-          <div className="px-3 py-1 text-center text-xs text-gray-600 bg-gray-50 border-t border-b">
-            {Math.round(zoomLevel * 100)}%
-          </div>
-          
-          <button
-            className="px-3 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors focus:ring-2 focus:ring-offset-1 focus:ring-green-500"
-            onClick={zoomOut}
-            title="Zoom Out"
-            aria-label="Zoom out"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-            </svg>
-          </button>
-          
-          <button
-            className="px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors border-t focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
-            onClick={resetZoom}
-            title="Reset Zoom"
-            aria-label="Reset zoom"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
-          </button>
-          
-          <button
-            className="px-3 py-2 bg-purple-600 text-white hover:bg-purple-700 transition-colors rounded-b-lg border-t focus:ring-2 focus:ring-offset-1 focus:ring-purple-500"
-            onClick={fitToWindow}
-            title="Fit to Window"
-            aria-label="Fit to window"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8l8-8 8 8M4 16l8 8 8-8" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Pan Control */}
-        <button
-          className={`px-3 py-2 bg-orange-600 text-white hover:bg-orange-700 transition-colors rounded-lg shadow border focus:ring-2 focus:ring-offset-1 focus:ring-orange-500 ${isPanning ? 'ring-2 ring-offset-1 ring-orange-700' : ''}`}
-          onClick={() => { togglePanning(); setIsPanning(prev => !prev); }}
-          title="Toggle Panning Mode"
-          aria-pressed={isPanning}
-          aria-label="Toggle panning mode"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-          </svg>
-        </button>
-      </div>
       
       {/* Show Details button only when a member is selected */}
       {selectedMember && (
@@ -348,16 +298,16 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
       )}
       
       {/* Instructions */}
-      <div className="absolute bottom-4 left-4 z-20 px-3 py-2 bg-white bg-opacity-90 text-gray-600 rounded shadow text-xs">
+      <div className="absolute bottom-4 left-4 z-20 px-3 py-2 bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-80 text-gray-600 dark:text-gray-300 rounded shadow text-xs">
         <div>• Use mouse wheel to zoom</div>
         <div>• Click and drag to pan</div>
         <div>• Use controls to adjust view</div>
       </div>
       
       {showPanel && selectedMember && (
-        <div id={`details-panel-${selectedMember.id}`} role="region" aria-labelledby={`details-heading-${selectedMember.id}`} className="absolute top-16 right-4 z-20 w-80 p-4 border rounded-lg shadow bg-white">
+        <div id={`details-panel-${selectedMember.id}`} role="region" aria-labelledby={`details-heading-${selectedMember.id}`} className="absolute top-16 right-4 z-20 w-80 p-4 border rounded-lg shadow bg-white dark:bg-gray-800 dark:border-gray-700">
           <button
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 transition-colors"
+            className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-500"
             onClick={() => setShowPanel(false)}
             aria-label="Close details"
           >
@@ -367,19 +317,20 @@ const FamilyTreeGoJS: React.FC<FamilyTreeGoJSProps> = ({ familyMembers }) => {
             <img
               src={selectedMember.profileImage}
               alt={selectedMember.name}
+              loading="lazy"
               className="w-16 h-16 rounded-full object-cover border mr-4"
             />
             <div>
-              <h2 id={`details-heading-${selectedMember.id}`} className="text-lg font-bold text-green-900">{selectedMember.name}</h2>
-              <p className="text-green-700">{selectedMember.relationship}</p>
-              <p className="text-gray-500 text-sm">
+              <h2 id={`details-heading-${selectedMember.id}`} className="text-lg font-bold text-green-900 dark:text-green-300">{selectedMember.name}</h2>
+              <p className="text-green-700 dark:text-green-200">{selectedMember.relationship}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 { (selectedMember.birthDate || selectedMember.deathDate) && `${formatDate(selectedMember.birthDate)}${selectedMember.birthDate && selectedMember.deathDate ? ' - ' : ''}${formatDate(selectedMember.deathDate)}` }
               </p>
             </div>
           </div>
-          {selectedMember.biography && <p className="mb-2 text-gray-700">{selectedMember.biography}</p>}
-          {selectedMember.occupation && <p className="text-sm text-gray-600">Occupation: {selectedMember.occupation}</p>}
-          {selectedMember.location && <p className="text-sm text-gray-600">Location: {selectedMember.location}</p>}
+          {selectedMember.biography && <p className="mb-2 text-gray-700 dark:text-gray-300">{selectedMember.biography}</p>}
+          {selectedMember.occupation && <p className="text-sm text-gray-600 dark:text-gray-400">Occupation: {selectedMember.occupation}</p>}
+          {selectedMember.location && <p className="text-sm text-gray-600 dark:text-gray-400">Location: {selectedMember.location}</p>}
         </div>
       )}
     </div>
